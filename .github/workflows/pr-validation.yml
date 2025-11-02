@@ -1,0 +1,122 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  validate:
+    name: 🔍 Validate Pull Request
+    runs-on: ubuntu-latest
+    outputs:
+      validation-result: ${{ steps.validation-summary.outputs.result }}
+      pr-comment-body: ${{ steps.validation-summary.outputs.comment-body }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Type check
+        id: type-check
+        run: npm run type-check
+
+      - name: 🎨 Lint
+        id: lint
+        run: npm run lint
+
+      - name: 🏗️ Build
+        id: build
+        run: npm run build
+
+      - name: 🧪 Test
+        id: test
+        run: npm run test
+
+      - name: 📊 Test Coverage
+        id: coverage
+        run: npm run test:coverage
+
+      - name: 📊 Validation Summary
+        id: validation-summary
+        if: always()
+        run: |
+          echo "result=${{ job.status }}" >> $GITHUB_OUTPUT
+
+          cat << 'EOF' >> $GITHUB_OUTPUT
+          comment-body<<COMMENT_EOF
+          ## 🔍 Pull Request Validation Results
+
+          | Step | Status |
+          |------|--------|
+          | 🔍 Type Check | ${{ steps.type-check.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+          | 🎨 Lint | ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+          | 🏗️ Build | ${{ steps.build.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+          | 🧪 Tests | ${{ steps.test.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+          | 📊 Coverage | ${{ steps.coverage.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+
+          **Overall:** ${{ job.status == 'success' && '✅ All checks passed!' || '❌ Some checks failed' }}
+          COMMENT_EOF
+          EOF
+
+  post-comment:
+    name: 💬 Post PR Comment
+    needs: [validate]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Post PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const validationBody = `${{ needs.validate.outputs.pr-comment-body }}`;
+            const timestamp = new Date().toISOString();
+
+            const finalBody = validationBody + `\n\n📋 [View workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n---\n⏰ Generated at: \`${timestamp}\``;
+
+            // Find existing comment from this workflow
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const workflowSignature = '📋 [View workflow]';
+            const existingComment = comments.data
+              .reverse()
+              .find(comment => comment.body.includes(workflowSignature) && comment.user.login === 'github-actions[bot]');
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: finalBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: finalBody
+              });
+            }
