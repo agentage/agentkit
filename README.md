@@ -1,10 +1,10 @@
-# Agent SDK
+# AgentKit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
 ## Table of contents
-- [Agent SDK](#agent-sdk)
+- [AgentKit](#agentkit)
   - [Table of contents](#table-of-contents)
   - [Installation](#installation)
   - [Features](#features)
@@ -55,9 +55,9 @@ console.log(result.content);
 
 ## Philosophy
 
-The Agent SDK philosophy is to provide small, functional tooling for building AI agents, making it a great solution for chatbots, automation, data processing, or AI-powered applications.
+The AgentKit philosophy is to provide small, functional tooling for building AI agents, making it a great solution for chatbots, automation, data processing, or AI-powered applications.
 
-Agent SDK does not force you to use any specific model or tool. With support for multiple model providers and custom adapters, you can quickly craft your perfect AI workflow.
+AgentKit does not force you to use any specific model or tool. With support for multiple model providers and custom adapters, you can quickly craft your perfect AI workflow.
 
 ## API Reference
 
@@ -124,7 +124,7 @@ const databaseTool = createTool({
 
 ## Contributing
 
-The Agent SDK project welcomes all constructive contributions.
+The AgentKit project welcomes all constructive contributions.
 
 ### Running Tests
 
@@ -142,7 +142,7 @@ npm test
 
 ## License
 
-[MIT](https://github.com/agentage/sdk/blob/master/LICENSE)
+[MIT](https://github.com/agentage/agentkit/blob/master/LICENSE)
 
 ---
 
