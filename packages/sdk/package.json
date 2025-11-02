@@ -1,0 +1,48 @@
+{
+  "name": "@agentkit/sdk",
+  "version": "0.1.0",
+  "description": "AgentKit SDK - Interface definitions and core types",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "verify": "npm run type-check && npm run lint && npm run build && npm run test",
+    "prepublishOnly": "npm run verify"
+  },
+  "keywords": [
+    "agentkit",
+    "sdk",
+    "typescript"
+  ],
+  "author": "Agentage",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentage/agentkit.git",
+    "directory": "packages/sdk"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.39.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  }
+}

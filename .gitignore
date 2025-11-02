@@ -1,23 +1,16 @@
 # Dependencies
 node_modules/
-package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# Build outputs
+# Build output
 dist/
 build/
 *.tsbuildinfo
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment files
-.env
-.env.local
-.env.*.local
+# Testing
+coverage/
+.nyc_output/
 
 # IDE
 .vscode/
@@ -30,10 +23,23 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Testing
-coverage/
-.nyc_output/
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Temporary files
+tmp/
+temp/
 *.tmp
-.cache/
+
+# Examples (reference only)
+example1/
+example2/

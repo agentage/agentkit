@@ -6,9 +6,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowJs": false,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "removeComments": true,
     "strict": true,
     "noImplicitAny": true,
@@ -24,7 +23,11 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
-  "exclude": ["node_modules", "dist", "build", "coverage"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

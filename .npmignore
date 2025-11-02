@@ -1,0 +1,35 @@
+# Source files
+src/
+*.test.ts
+
+# Development files
+.github/
+.vscode/
+.eslintrc.json
+.prettierrc.json
+.prettierignore
+jest.config.js
+tsconfig.json
+
+# Testing
+coverage/
+.nyc_output/
+
+# Documentation
+docs/
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Temporary
+tmp/
+temp/
+*.tmp

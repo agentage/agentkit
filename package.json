@@ -1,8 +1,9 @@
 {
   "name": "agentkit",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "AgentKit monorepo",
+  "description": "AgentKit monorepo - AI agent framework and SDK",
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],
@@ -12,15 +13,44 @@
   },
   "scripts": {
     "build": "npm run build --workspaces",
+    "type-check": "npm run type-check --workspaces",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
     "test": "npm run test --workspaces",
+    "test:watch": "npm run test:watch --workspaces",
+    "test:coverage": "npm run test:coverage --workspaces",
     "clean": "npm run clean --workspaces",
-    "lint": "npm run lint --workspaces"
+    "verify": "npm run type-check && npm run lint && npm run build && npm run test"
   },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.3.0"
-  },
-  "keywords": ["agent", "agentkit", "ai", "agents", "framework", "automation", "toolkit", "multi-agent"],
+  "keywords": [
+    "agent",
+    "agentkit",
+    "ai",
+    "agents",
+    "framework",
+    "automation",
+    "toolkit",
+    "multi-agent"
+  ],
   "author": "Volodymyr Vreshch <vreshch@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentage/agentkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/agentage/agentkit/issues"
+  },
+  "homepage": "https://github.com/agentage/agentkit#readme",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.39.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  }
 }
