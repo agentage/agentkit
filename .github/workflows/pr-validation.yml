@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📊 Post PR comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const validationBody = `${{ needs.validate.outputs.pr-comment-body }}`;
