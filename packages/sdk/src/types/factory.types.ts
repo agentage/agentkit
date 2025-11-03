@@ -1,17 +1,24 @@
-import type { Agent, AgentConfig } from './agent.types.js';
+import type { Agent, AgentConfig, Tool } from './agent.types.js';
 
 /**
- * Tool creation configuration
+ * Tool creation configuration with generic type support
  */
-export interface CreateToolConfig<TSchema = unknown, TResult = unknown> {
+export interface CreateToolConfig<TParams = unknown, TResult = unknown> {
   name: string;
   description: string;
-  schema: TSchema;
-  execute: (params: unknown) => Promise<TResult>;
+  schema: import('./agent.types.js').ToolSchema<TParams>;
+  execute: (params: TParams) => Promise<TResult>;
 }
 
 /**
- * Agent factory function type
+ * Tool factory function type
+ */
+export type ToolFactory = <TParams = unknown, TResult = unknown>(
+  config: CreateToolConfig<TParams, TResult>
+) => Tool<TParams, TResult>;
+
+/**
+ * Agent factory function type (supports both builder and config patterns)
  */
 export type AgentFactory = {
   (name: string): Agent;

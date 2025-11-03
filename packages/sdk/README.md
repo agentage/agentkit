@@ -1,11 +1,11 @@
-# @agentkit/sdk
+# @agentage/sdk
 
 AgentKit SDK - Core interface definitions and types for building AI agents.
 
 ## Installation
 
 ```bash
-npm install @agentkit/sdk
+npm install @agentage/sdk
 ```
 
 ## Usage
@@ -13,76 +13,195 @@ npm install @agentkit/sdk
 ### Pattern 1: Builder (Express-like)
 
 ```typescript
-import type { Agent } from '@agentkit/sdk';
+import { agent, tool } from '@agentage/sdk';
+import type { Agent, AgentResponse } from '@agentage/sdk';
 
 const assistant: Agent = agent('assistant')
-  .model('gpt-4', { temperature: 0.7 })
+  .model('gpt-4', { temperature: 0.7, maxTokens: 2000 })
   .instructions('You are a helpful assistant')
   .tools([searchTool, calculatorTool]);
 
-const result = await assistant.send('Help me with this task');
+const result: AgentResponse = await assistant.send('Help me with this task');
 console.log(result.content);
 ```
 
 ### Pattern 2: Config Object
 
 ```typescript
-import type { AgentConfig } from '@agentkit/sdk';
+import { agent } from '@agentage/sdk';
+import type { AgentConfig, Agent } from '@agentage/sdk';
 
 const config: AgentConfig = {
   name: 'assistant',
-  model: 'gpt-4',
-  temperature: 0.7,
+  model: {
+    name: 'gpt-4',
+    config: { temperature: 0.7, maxTokens: 2000 }
+  },
   instructions: 'You are a helpful assistant',
   tools: [searchTool, calculatorTool],
 };
 
-const assistant = agent(config);
-await assistant.send('Help me with this');
+const assistant: Agent = agent(config);
+const result = await assistant.send('Help me with this');
 ```
 
 ### Defining Tools
 
 ```typescript
-import type { Tool, CreateToolConfig } from '@agentkit/sdk';
+import { tool } from '@agentage/sdk';
+import type { Tool, CreateToolConfig } from '@agentage/sdk';
 import { z } from 'zod';
 
-const githubTool: CreateToolConfig = {
+// Type-safe tool definition
+const githubSchema = z.object({
+  repo: z.string(),
+  action: z.enum(['get', 'list', 'search']),
+});
+
+type GithubParams = z.infer<typeof githubSchema>;
+type GithubResult = { name: string; stars: number };
+
+const githubTool: Tool<GithubParams, GithubResult> = tool({
   name: 'github',
   description: 'Access GitHub repositories',
-  schema: z.object({
-    repo: z.string(),
-    action: z.enum(['get', 'list', 'search']),
-  }),
+  schema: githubSchema,
   execute: async ({ repo, action }) => {
     const response = await fetch(`https://api.github.com/repos/${repo}`);
-    return response.json();
+    const data = await response.json();
+    return { name: data.name, stars: data.stargazers_count };
   },
+});
+
+// Simple tool without explicit types
+const databaseTool = tool({
+  name: 'database',
+  description: 'Query database',
+  schema: z.object({
+    query: z.string(),
+    limit: z.number().optional(),
+  }),
+  execute: async ({ query, limit = 10 }) => {
+    return await db.execute(query, { limit });
+  },
+});
+```
+
+### Streaming Responses
+
+```typescript
+const assistant = agent('assistant')
+  .model('gpt-4', { temperature: 0.7 })
+  .instructions('You are a helpful assistant');
+
+for await (const chunk of assistant.stream('Tell me a story')) {
+  console.log(chunk.content);
+}
+```
+
+## Type Definitions
+
+### Core Interfaces
+
+#### `Agent`
+Main interface with builder pattern methods:
+- `model(modelName: string, config?: ModelConfig): Agent`
+- `instructions(text: string): Agent`
+- `tools(toolList: Tool[]): Agent`
+- `send(message: string): Promise<AgentResponse>`
+- `stream(message: string): AsyncIterableIterator<AgentResponse>`
+
+#### `AgentConfig`
+Configuration object for creating agents:
+```typescript
+interface AgentConfig {
+  name: string;
+  model: string | ModelDefinition;
+  instructions?: string;
+  tools?: Tool[];
+}
+```
+
+#### `Tool<TParams, TResult>`
+Tool definition with generic type support:
+```typescript
+interface Tool<TParams = unknown, TResult = unknown> {
+  name: string;
+  description: string;
+  schema: ToolSchema<TParams>;
+  execute: (params: TParams) => Promise<TResult>;
+}
+```
+
+#### `AgentResponse<T>`
+Response from agent operations:
+```typescript
+interface AgentResponse<T = unknown> {
+  content: string;
+  metadata?: Record<string, unknown>;
+  data?: T;
+  toolCalls?: ToolCall[];
+}
+```
+
+#### `ModelConfig`
+Model configuration options:
+```typescript
+interface ModelConfig {
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  timeout?: number;
+}
+```
+
+#### `ModelDefinition`
+Model with explicit configuration:
+```typescript
+interface ModelDefinition {
+  name: string;
+  config?: ModelConfig;
+}
+```
+
+### Factory Types
+
+#### `AgentFactory`
+Factory function supporting both patterns:
+```typescript
+type AgentFactory = {
+  (name: string): Agent;
+  (config: AgentConfig): Agent;
 };
 ```
 
-## Interfaces
+#### `ToolFactory`
+Type-safe tool creation:
+```typescript
+type ToolFactory = <TParams = unknown, TResult = unknown>(
+  config: CreateToolConfig<TParams, TResult>
+) => Tool<TParams, TResult>;
+```
 
-### AgentConfig
-Configuration for an agent instance with model, instructions, temperature, and tools.
+#### `CreateToolConfig<TParams, TResult>`
+Configuration for creating tools:
+```typescript
+interface CreateToolConfig<TParams = unknown, TResult = unknown> {
+  name: string;
+  description: string;
+  schema: ToolSchema<TParams>;
+  execute: (params: TParams) => Promise<TResult>;
+}
+```
 
-### Agent
-Core interface with builder pattern methods: `model()`, `instructions()`, `tools()`, `send()`.
+## Features
 
-### Tool
-Tool definition with name, description, schema, and execute function.
-
-### AgentResponse
-Response structure from agent with content and optional metadata.
-
-### ModelConfig
-Model configuration options including temperature, maxTokens, and topP.
-
-### CreateToolConfig
-Tool creation configuration type for type-safe tool definitions.
-
-### AgentFactory
-Factory function type supporting both string and config object patterns.
+✅ **Full TypeScript Support** - Complete type definitions with generics  
+✅ **Zod Integration** - Built-in support for Zod schemas  
+✅ **Builder Pattern** - Fluent, chainable API  
+✅ **Config Object Pattern** - Declarative configuration  
+✅ **Type-Safe Tools** - Generic tool definitions with parameter and result typing  
+✅ **Streaming Support** - Async iteration for streaming responses  
+✅ **Zero Dependencies** - Pure interface definitions
 
 ## Development
 
