@@ -21,7 +21,7 @@ jobs:
     outputs:
       packages: ${{ steps.detect.outputs.packages }}
       has-changes: ${{ steps.detect.outputs.has-changes }}
-    
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v5
@@ -73,7 +73,7 @@ jobs:
           }
 
           changed_packages=()
-          
+
           # Check all packages
           for pkg_dir in packages/*; do
             if [ ! -d "$pkg_dir" ]; then
@@ -97,7 +97,7 @@ jobs:
               changed_packages+=("{\"name\":\"${name}\",\"version\":\"${version}\",\"dir\":\"${dir}\"}")
             fi
           done
-          
+
           # Build JSON array
           if [ ${#changed_packages[@]} -eq 0 ]; then
             echo "has-changes=false" >> $GITHUB_OUTPUT
@@ -119,7 +119,7 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
       fail-fast: true
-    
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v5
@@ -152,7 +152,7 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
       fail-fast: false
-    
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v5
@@ -183,11 +183,11 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           # Extract package name without scope
           PKG_SHORT_NAME=$(echo "${{ matrix.package.name }}" | sed 's/@agentage\///')
           TAG_NAME="${PKG_SHORT_NAME}@${{ matrix.package.version }}"
-          
+
           git tag -a "${TAG_NAME}" -m "Release ${{ matrix.package.name }}@${{ matrix.package.version }}"
           git push origin "${TAG_NAME}"
 
@@ -201,13 +201,13 @@ jobs:
     needs: [detect-changes, verify, publish]
     if: always() && needs.detect-changes.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 📊 Create summary
         run: |
           echo "## 📦 Package Publishing Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ needs.verify.result }}" != "success" ]; then
             echo "❌ **Verification failed - packages not published**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -219,13 +219,13 @@ jobs:
           else
             echo "⚠️ **Some packages failed to publish**" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           packages='${{ needs.detect-changes.outputs.packages }}'
-          
+
           if [ "${{ needs.verify.result }}" == "success" ] && [ "${{ needs.publish.result }}" == "success" ]; then
             echo "$packages" | jq -r '.[] | "- ✅ **\(.name)** version \(.version) - Published"' >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.verify.result }}" != "success" ]; then
