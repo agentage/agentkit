@@ -2,7 +2,6 @@ import type {
   Agent,
   AgentConfig,
   AgentResponse,
-  Message,
   ModelConfig,
   Tool,
 } from '@agentage/core';
@@ -67,7 +66,7 @@ class AgentBuilder implements Agent {
 
     const openai = new OpenAI({ apiKey });
 
-    const messages: Message[] = [];
+    const messages: ChatCompletionMessageParam[] = [];
 
     if (this._instructions) {
       messages.push({ role: 'system', content: this._instructions });
@@ -75,15 +74,71 @@ class AgentBuilder implements Agent {
 
     messages.push({ role: 'user', content: message });
 
-    const response = await openai.chat.completions.create({
+    // Convert tools to OpenAI format
+    const tools = this._tools?.map((tool) => ({
+      type: 'function' as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.schema,
+      },
+    }));
+
+    let response = await openai.chat.completions.create({
       model: modelName,
-      messages: messages as unknown as ChatCompletionMessageParam[],
+      messages,
+      tools: tools && tools.length > 0 ? tools : undefined,
       temperature: this._modelConfig?.temperature,
       max_tokens: this._modelConfig?.maxTokens,
       top_p: this._modelConfig?.topP,
     });
 
-    const choice = response.choices[0];
+    let choice = response.choices[0];
+
+    // Handle tool calls
+    while (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {
+      // Add assistant message with tool_calls
+      messages.push({
+        role: 'assistant',
+        content: choice.message.content,
+        tool_calls: choice.message.tool_calls,
+      });
+
+      // Execute each tool call and add tool messages
+      for (const toolCall of choice.message.tool_calls) {
+        const tool = this._tools?.find(
+          (t) => t.name === toolCall.function.name
+        );
+        if (!tool) {
+          throw new Error(`Tool ${toolCall.function.name} not found`);
+        }
+
+        // Parse arguments and execute tool
+        const args = JSON.parse(toolCall.function.arguments);
+        const toolMessages = await tool.execute(args);
+
+        // Add tool result messages
+        for (const toolMessage of toolMessages) {
+          messages.push({
+            role: 'tool',
+            content: toolMessage.content || '',
+            tool_call_id: toolCall.id,
+          });
+        }
+      }
+
+      // Continue conversation with tool results
+      response = await openai.chat.completions.create({
+        model: modelName,
+        messages,
+        tools: tools && tools.length > 0 ? tools : undefined,
+        temperature: this._modelConfig?.temperature,
+        max_tokens: this._modelConfig?.maxTokens,
+        top_p: this._modelConfig?.topP,
+      });
+
+      choice = response.choices[0];
+    }
 
     return {
       content: choice.message.content || '',

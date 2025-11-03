@@ -1,0 +1,21 @@
+{
+  "name": "agent-sdk-basic-tool-example",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Basic example using AgentKit SDK with tools",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
+  },
+  "dependencies": {
+    "@agentage/core": "file:../../packages/core",
+    "@agentage/sdk": "file:../../packages/sdk",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  }
+}
