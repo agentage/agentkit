@@ -75,6 +75,7 @@ describe('Agent Types', () => {
         model: () => mockAgent,
         instructions: () => mockAgent,
         tools: () => mockAgent,
+        config: () => mockAgent,
         send: async () => ({ content: '' }),
         stream: async function* () {
           yield { content: '' };
@@ -84,6 +85,7 @@ describe('Agent Types', () => {
       expect(mockAgent.model).toBeDefined();
       expect(mockAgent.instructions).toBeDefined();
       expect(mockAgent.tools).toBeDefined();
+      expect(mockAgent.config).toBeDefined();
       expect(mockAgent.send).toBeDefined();
       expect(mockAgent.stream).toBeDefined();
     });

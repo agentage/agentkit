@@ -28,6 +28,7 @@ export interface Agent {
   model(modelName: string, config?: ModelConfig): Agent;
   instructions(text: string): Agent;
   tools(toolList: Tool[]): Agent;
+  config(configEntries: Array<{ key: string; value: string }>): Agent;
   send(message: string): Promise<AgentResponse>;
   stream(message: string): AsyncIterableIterator<AgentResponse>;
 }
