@@ -1,6 +1,6 @@
 {
   "name": "agentkit",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "AgentKit monorepo - AI agent framework and SDK",
   "type": "module",

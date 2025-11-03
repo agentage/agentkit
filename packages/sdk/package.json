@@ -1,6 +1,6 @@
 {
   "name": "@agentage/sdk",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "AgentKit SDK - Interface definitions and core types",
   "type": "module",
   "main": "./dist/index.js",
