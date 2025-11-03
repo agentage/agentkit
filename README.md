@@ -79,8 +79,12 @@ await assistant.send('Help me with this');
 ```typescript
 const assistant = agent({
   name: 'assistant',
-  model: 'gpt-4',
-  temperature: 0.7,
+  model: {
+    name: 'gpt-4',
+    config: {
+      temperature: 0.7
+    }
+  },
   instructions: 'You are a helpful assistant',
   tools: [searchTool, calculatorTool]
 });
@@ -93,10 +97,10 @@ Both patterns produce the same result - choose based on preference.
 ### Defining Tools
 
 ```typescript
-import { createTool } from '@agentage/sdk';
+import { tool } from '@agentage/sdk';
 import { z } from 'zod';
 
-const githubTool = createTool({
+const githubTool = tool({
   name: 'github',
   description: 'Access GitHub repositories',
   schema: z.object({
@@ -109,7 +113,7 @@ const githubTool = createTool({
   }
 });
 
-const databaseTool = createTool({
+const databaseTool = tool({
   name: 'database',
   description: 'Query database',
   schema: z.object({
