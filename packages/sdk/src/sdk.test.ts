@@ -55,7 +55,7 @@ describe('SDK', () => {
         execute: async () => [],
       });
 
-      const assistant = agent('assistant').tools([searchTool]);
+      const assistant = agent('assistant').tools([searchTool as any]);
 
       const config = (assistant as any).getConfig();
       expect(config.tools).toHaveLength(1);

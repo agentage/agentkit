@@ -16,7 +16,8 @@ class AgentBuilder implements Agent {
   private _modelName?: string;
   private _modelConfig?: ModelConfig;
   private _instructions?: string;
-  private _tools?: Tool[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private _tools?: Tool<any>[];
   private _config?: Record<string, string>;
 
   constructor(name: string) {
@@ -34,7 +35,8 @@ class AgentBuilder implements Agent {
     return this;
   }
 
-  tools(toolList: Tool[]): Agent {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tools(toolList: Tool<any>[]): Agent {
     this._tools = toolList;
     return this;
   }

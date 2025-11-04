@@ -16,6 +16,25 @@ export type ToolSchema<T = unknown> =
   | Record<string, unknown>;
 
 /**
+ * Infer the type from a schema
+ */
+export type InferSchemaType<TSchema> = TSchema extends {
+  parse: (data: unknown) => infer T;
+}
+  ? T
+  : TSchema extends { _type: infer T }
+  ? T
+  : TSchema extends Record<string, { parse?: (data: unknown) => unknown }>
+  ? {
+      [K in keyof TSchema]: TSchema[K] extends {
+        parse?: (data: unknown) => infer U;
+      }
+        ? U
+        : never;
+    }
+  : unknown;
+
+/**
  * Tool definition interface with generic type support
  */
 export interface Tool<TParams = unknown> {
@@ -35,18 +54,18 @@ export interface ToolCall {
 }
 
 /**
- * Tool creation configuration with generic type support
+ * Tool creation configuration with automatic type inference from schema
  */
-export interface CreateToolConfig<TParams = unknown> {
+export interface CreateToolConfig<TSchema = unknown> {
   name: string;
   description: string;
-  schema: ToolSchema<TParams>;
-  execute: (params: TParams) => Promise<Message[]>;
+  schema: TSchema;
+  execute: (params: InferSchemaType<TSchema>) => Promise<Message[]>;
 }
 
 /**
- * Tool factory function type
+ * Tool factory function type with automatic type inference
  */
-export type ToolFactory = <TParams = unknown>(
-  config: CreateToolConfig<TParams>
-) => Tool<TParams>;
+export type ToolFactory = <TSchema = unknown>(
+  config: CreateToolConfig<TSchema>
+) => Tool<InferSchemaType<TSchema>>;

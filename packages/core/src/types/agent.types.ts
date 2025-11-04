@@ -8,7 +8,8 @@ export interface AgentConfig {
   name: string;
   model: string | ModelDefinition;
   instructions?: string;
-  tools?: Tool[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tools?: Tool<any>[];
 }
 
 /**
@@ -27,7 +28,8 @@ export interface AgentResponse<T = unknown> {
 export interface Agent {
   model(modelName: string, config?: ModelConfig): Agent;
   instructions(text: string): Agent;
-  tools(toolList: Tool[]): Agent;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tools(toolList: Tool<any>[]): Agent;
   config(configEntries: Array<{ key: string; value: string }>): Agent;
   send(message: string): Promise<AgentResponse>;
   stream(message: string): AsyncIterableIterator<AgentResponse>;

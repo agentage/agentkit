@@ -11,7 +11,8 @@
   "dependencies": {
     "@agentage/core": "file:../../packages/core",
     "@agentage/sdk": "file:../../packages/sdk",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

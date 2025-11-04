@@ -1,5 +1,6 @@
-import { agent, tool, type Tool } from '@agentage/sdk';
+import { agent, tool } from '@agentage/sdk';
 import dotenv from 'dotenv';
+import { z } from 'zod';
 
 dotenv.config();
 
@@ -11,46 +12,32 @@ async function main(): Promise<void> {
     name: 'calculator',
     description: 'Performs basic arithmetic operations',
     schema: {
-      type: 'object',
-      properties: {
-        operation: {
-          type: 'string',
-          enum: ['add', 'subtract', 'multiply', 'divide'],
-          description: 'The arithmetic operation to perform',
-        },
-        a: {
-          type: 'number',
-          description: 'First number',
-        },
-        b: {
-          type: 'number',
-          description: 'Second number',
-        },
-      },
-      required: ['operation', 'a', 'b'],
+      operation: z
+        .enum(['add', 'subtract', 'multiply', 'divide'])
+        .describe('The arithmetic operation to perform'),
+      a: z.number().describe('First number'),
+      b: z.number().describe('Second number'),
     },
-    execute: async (params: { operation: string; a: number; b: number }) => {
+    execute: async ({ operation, a, b }) => {
       let result: number;
-      switch (params.operation) {
+      switch (operation) {
         case 'add':
-          result = params.a + params.b;
+          result = a + b;
           break;
         case 'subtract':
-          result = params.a - params.b;
+          result = a - b;
           break;
         case 'multiply':
-          result = params.a * params.b;
+          result = a * b;
           break;
         case 'divide':
-          result = params.a / params.b;
+          result = a / b;
           break;
         default:
-          throw new Error(`Unknown operation: ${params.operation}`);
+          throw new Error(`Unknown operation: ${operation}`);
       }
 
-      console.log(
-        `🔧 Tool executed: ${params.a} ${params.operation} ${params.b} = ${result}`
-      );
+      console.log(`🔧 Tool executed: ${a} ${operation} ${b} = ${result}`);
 
       return [
         {
@@ -69,7 +56,7 @@ async function main(): Promise<void> {
     .instructions(
       'You are a helpful math assistant. Use the calculator tool when asked to perform calculations.'
     )
-    .tools([calculatorTool as Tool]);
+    .tools([calculatorTool]);
 
   console.log('💬 Sending message to Agent...\n');
 
