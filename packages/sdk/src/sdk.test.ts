@@ -29,6 +29,54 @@ describe('SDK', () => {
       expect(config.model).toBe('gpt-4');
     });
 
+    it('should create agent with config object with model definition', () => {
+      const assistant = agent({
+        name: 'assistant',
+        model: {
+          name: 'gpt-4',
+          config: { temperature: 0.5 },
+        },
+        instructions: 'You are helpful',
+      });
+
+      const config = (assistant as any).getConfig();
+      expect(config.name).toBe('assistant');
+      expect(config.model).toEqual({
+        name: 'gpt-4',
+        config: { temperature: 0.5 },
+      });
+    });
+
+    it('should create agent with tools', () => {
+      const searchTool = tool({
+        name: 'search',
+        description: 'Search',
+        schema: {},
+        execute: async () => [],
+      });
+
+      const assistant = agent('assistant').tools([searchTool]);
+
+      const config = (assistant as any).getConfig();
+      expect(config.tools).toHaveLength(1);
+      expect(config.tools[0].name).toBe('search');
+    });
+
+    it('should create agent with config method', () => {
+      const assistant = agent('test').config([
+        { key: 'OPENAI_API_KEY', value: 'test-key' },
+      ]);
+
+      expect(assistant).toBeDefined();
+    });
+
+    it('should create agent with default model', () => {
+      const assistant = agent('test');
+      const config = (assistant as any).getConfig();
+      expect(config.name).toBe('test');
+      expect(config.model).toBe('gpt-4');
+    });
+
     it('should throw error when send is called without API key', async () => {
       const assistant = agent('test').model('gpt-4');
       await expect(assistant.send('hello')).rejects.toThrow('API key required');
@@ -39,6 +87,12 @@ describe('SDK', () => {
         .model('claude-3')
         .config([{ key: 'OPENAI_API_KEY', value: 'fake-key' }]);
       await expect(assistant.send('hello')).rejects.toThrow('not supported');
+    });
+
+    it('should throw error for stream method', async () => {
+      const assistant = agent('test');
+      const streamGen = assistant.stream('hello');
+      await expect(streamGen.next()).rejects.toThrow('not yet implemented');
     });
   });
 
@@ -57,6 +111,27 @@ describe('SDK', () => {
       expect(searchTool.description).toBe('Search the web');
       const result = await searchTool.execute({});
       expect(result).toHaveLength(1);
+    });
+
+    it('should create tool with schema', () => {
+      const searchTool = tool({
+        name: 'search',
+        description: 'Search the web',
+        schema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string' },
+          },
+        },
+        execute: async () => [],
+      });
+
+      expect(searchTool.schema).toEqual({
+        type: 'object',
+        properties: {
+          query: { type: 'string' },
+        },
+      });
     });
   });
 });
