@@ -30,6 +30,10 @@
     "url": "https://github.com/agentage/agentkit.git",
     "directory": "packages/sdk"
   },
+  "bugs": {
+    "url": "https://github.com/agentage/agentkit/issues"
+  },
+  "homepage": "https://github.com/agentage/agentkit/tree/master/packages/sdk#readme",
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
