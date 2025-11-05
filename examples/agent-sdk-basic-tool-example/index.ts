@@ -8,17 +8,20 @@ async function main(): Promise<void> {
   console.log('🤖 Agent SDK Tool Example\n');
 
   // Create a simple calculator tool
-  const calculatorTool = tool({
-    name: 'calculator',
-    description: 'Performs basic arithmetic operations',
-    schema: {
-      operation: z
-        .enum(['add', 'subtract', 'multiply', 'divide'])
-        .describe('The arithmetic operation to perform'),
-      a: z.number().describe('First number'),
-      b: z.number().describe('Second number'),
+  const calculatorTool = tool(
+    {
+      name: 'calculator',
+      title: 'Calculator Tool',
+      description: 'Performs basic arithmetic operations',
+      inputSchema: {
+        operation: z
+          .enum(['add', 'subtract', 'multiply', 'divide'])
+          .describe('The arithmetic operation to perform'),
+        a: z.number().describe('First number'),
+        b: z.number().describe('Second number'),
+      },
     },
-    execute: async ({ operation, a, b }) => {
+    async ({ operation, a, b }) => {
       let result: number;
       switch (operation) {
         case 'add':
@@ -39,15 +42,13 @@ async function main(): Promise<void> {
 
       console.log(`🔧 Tool executed: ${a} ${operation} ${b} = ${result}`);
 
-      return [
-        {
-          role: 'tool',
-          content: `Result: ${result}`,
-          toolCallId: 'calc_1',
+      return {
+        content: {
+          content: [{ type: 'text', text: String(result) }],
         },
-      ];
-    },
-  });
+      };
+    }
+  );
 
   // Create agent with tool
   const assistant = agent('math-assistant')

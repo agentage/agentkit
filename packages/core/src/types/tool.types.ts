@@ -1,5 +1,3 @@
-import type { Message } from './message.types.js';
-
 /**
  * Tool schema definition - can be any schema validator (e.g., Zod schema)
  */
@@ -37,11 +35,11 @@ export type InferSchemaType<TSchema> = TSchema extends {
 /**
  * Tool definition interface with generic type support
  */
-export interface Tool<TParams = unknown> {
+export interface Tool<TParams = unknown, TResult = unknown> {
   name: string;
   description: string;
   schema: ToolSchema<TParams>;
-  execute: (params: TParams) => Promise<Message[]>;
+  execute: (params: TParams) => Promise<TResult>;
 }
 
 /**
@@ -58,14 +56,22 @@ export interface ToolCall {
  */
 export interface CreateToolConfig<TSchema = unknown> {
   name: string;
+  title?: string;
   description: string;
-  schema: TSchema;
-  execute: (params: InferSchemaType<TSchema>) => Promise<Message[]>;
+  inputSchema: TSchema;
 }
+
+/**
+ * Tool execute function type
+ */
+export type ToolExecuteFunction<TSchema = unknown, TResult = unknown> = (
+  params: InferSchemaType<TSchema>
+) => Promise<TResult>;
 
 /**
  * Tool factory function type with automatic type inference
  */
-export type ToolFactory = <TSchema = unknown>(
-  config: CreateToolConfig<TSchema>
-) => Tool<InferSchemaType<TSchema>>;
+export type ToolFactory = <TSchema = unknown, TResult = unknown>(
+  config: CreateToolConfig<TSchema>,
+  execute: ToolExecuteFunction<TSchema, TResult>
+) => Tool<InferSchemaType<TSchema>, TResult>;

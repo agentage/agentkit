@@ -1,3 +1,4 @@
+import type { Message } from './message.types';
 import type {
   CreateToolConfig,
   Tool,
@@ -19,7 +20,7 @@ describe('Tool Types', () => {
       expect(tool.name).toBe('search');
       const result = await tool.execute({ query: 'test' });
       expect(result).toHaveLength(1);
-      expect(result[0].role).toBe('tool');
+      expect((result as Message[])[0].role).toBe('tool');
     });
 
     it('should allow typed tool with generics', async () => {
@@ -27,7 +28,7 @@ describe('Tool Types', () => {
         query: string;
       }
 
-      const tool: Tool<SearchParams> = {
+      const tool: Tool<SearchParams, Message[]> = {
         name: 'search',
         description: 'Search tool',
         schema: {},
@@ -42,8 +43,8 @@ describe('Tool Types', () => {
 
       const result = await tool.execute({ query: 'test' });
       expect(result).toHaveLength(1);
-      expect(result[0].role).toBe('tool');
-      expect(result[0].content).toContain('test');
+      expect((result as Message[])[0].role).toBe('tool');
+      expect((result as Message[])[0].content).toContain('test');
     });
   });
 
@@ -94,10 +95,7 @@ describe('Tool Types', () => {
       const config: CreateToolConfig = {
         name: 'test',
         description: 'Test tool',
-        schema: {},
-        execute: async () => [
-          { role: 'tool', content: '{}', toolCallId: 'call_1' },
-        ],
+        inputSchema: {},
       };
       expect(config.name).toBe('test');
     });

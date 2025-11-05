@@ -100,30 +100,36 @@ Both patterns produce the same result - choose based on preference.
 import { tool } from '@agentage/sdk';
 import { z } from 'zod';
 
-const githubTool = tool({
-  name: 'github',
-  description: 'Access GitHub repositories',
-  schema: z.object({
-    repo: z.string(),
-    action: z.enum(['get', 'list', 'search'])
-  }),
-  execute: async ({ repo, action }) => {
+const githubTool = tool(
+  {
+    name: 'github',
+    title: 'GitHub Tool',
+    description: 'Access GitHub repositories',
+    inputSchema: {
+      repo: z.string(),
+      action: z.enum(['get', 'list', 'search'])
+    }
+  },
+  async ({ repo, action }) => {
     const response = await fetch(`https://api.github.com/repos/${repo}`);
     return response.json();
   }
-});
+);
 
-const databaseTool = tool({
-  name: 'database',
-  description: 'Query database',
-  schema: z.object({
-    query: z.string(),
-    limit: z.number().optional() 
-  }),
-  execute: async ({ query, limit = 10 }) => {
+const databaseTool = tool(
+  {
+    name: 'database',
+    title: 'Database Tool',
+    description: 'Query database',
+    inputSchema: {
+      query: z.string(),
+      limit: z.number().optional() 
+    }
+  },
+  async ({ query, limit = 10 }) => {
     return await db.execute(query, { limit });
   }
-});
+);
 ```
 
 ## Contributing

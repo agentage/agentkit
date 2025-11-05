@@ -48,8 +48,7 @@ export interface AgentConfig {
   name: string;
   model: string | ModelDefinition;
   instructions?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tools?: Tool<any>[];
+  tools?: Tool<unknown, unknown>[];
 }
 
 /**
@@ -77,8 +76,7 @@ export interface ToolCall {
 export interface Agent {
   model(modelName: string, config?: ModelConfig): Agent;
   instructions(text: string): Agent;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tools(toolList: Tool<any>[]): Agent;
+  tools(toolList: Tool<unknown, unknown>[]): Agent;
   send(message: string): Promise<AgentResponse>;
   stream(message: string): AsyncIterableIterator<AgentResponse>;
 }

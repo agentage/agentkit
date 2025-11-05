@@ -48,12 +48,14 @@ describe('SDK', () => {
     });
 
     it('should create agent with tools', () => {
-      const searchTool = tool({
-        name: 'search',
-        description: 'Search',
-        schema: {},
-        execute: async () => [],
-      });
+      const searchTool = tool(
+        {
+          name: 'search',
+          description: 'Search',
+          inputSchema: {},
+        },
+        async () => []
+      );
 
       const assistant = agent('assistant').tools([searchTool as any]);
 
@@ -98,14 +100,14 @@ describe('SDK', () => {
 
   describe('tool factory', () => {
     it('should create tool', async () => {
-      const searchTool = tool({
-        name: 'search',
-        description: 'Search the web',
-        schema: {},
-        execute: async () => [
-          { role: 'tool', content: 'result', toolCallId: 'call_1' },
-        ],
-      });
+      const searchTool = tool(
+        {
+          name: 'search',
+          description: 'Search the web',
+          inputSchema: {},
+        },
+        async () => [{ role: 'tool', content: 'result', toolCallId: 'call_1' }]
+      );
 
       expect(searchTool.name).toBe('search');
       expect(searchTool.description).toBe('Search the web');
@@ -114,17 +116,19 @@ describe('SDK', () => {
     });
 
     it('should create tool with schema', () => {
-      const searchTool = tool({
-        name: 'search',
-        description: 'Search the web',
-        schema: {
-          type: 'object',
-          properties: {
-            query: { type: 'string' },
+      const searchTool = tool(
+        {
+          name: 'search',
+          description: 'Search the web',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string' },
+            },
           },
         },
-        execute: async () => [],
-      });
+        async () => []
+      );
 
       expect(searchTool.schema).toEqual({
         type: 'object',

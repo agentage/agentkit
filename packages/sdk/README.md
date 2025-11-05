@@ -49,41 +49,48 @@ const result = await assistant.send('Help me with this');
 
 ```typescript
 import { tool } from '@agentage/sdk';
-import type { Tool, CreateToolConfig } from '@agentage/sdk';
+import type { Tool } from '@agentage/sdk';
 import { z } from 'zod';
 
-// Type-safe tool definition
-const githubSchema = z.object({
-  repo: z.string(),
-  action: z.enum(['get', 'list', 'search']),
-});
-
-type GithubParams = z.infer<typeof githubSchema>;
+// Type-safe tool definition with explicit types
+type GithubParams = {
+  repo: string;
+  action: 'get' | 'list' | 'search';
+};
 type GithubResult = { name: string; stars: number };
 
-const githubTool: Tool<GithubParams, GithubResult> = tool({
-  name: 'github',
-  description: 'Access GitHub repositories',
-  schema: githubSchema,
-  execute: async ({ repo, action }) => {
+const githubTool: Tool<GithubParams, GithubResult> = tool(
+  {
+    name: 'github',
+    title: 'GitHub Tool',
+    description: 'Access GitHub repositories',
+    inputSchema: {
+      repo: z.string(),
+      action: z.enum(['get', 'list', 'search']),
+    }
+  },
+  async ({ repo, action }) => {
     const response = await fetch(`https://api.github.com/repos/${repo}`);
     const data = await response.json();
     return { name: data.name, stars: data.stargazers_count };
-  },
-});
+  }
+);
 
-// Simple tool without explicit types
-const databaseTool = tool({
-  name: 'database',
-  description: 'Query database',
-  schema: z.object({
-    query: z.string(),
-    limit: z.number().optional(),
-  }),
-  execute: async ({ query, limit = 10 }) => {
-    return await db.execute(query, { limit });
+// Simple tool with inferred types
+const databaseTool = tool(
+  {
+    name: 'database',
+    title: 'Database Tool',
+    description: 'Query database',
+    inputSchema: {
+      query: z.string(),
+      limit: z.number().optional(),
+    }
   },
-});
+  async ({ query, limit = 10 }) => {
+    return await db.execute(query, { limit });
+  }
+);
 ```
 
 ### Streaming Responses
@@ -106,7 +113,8 @@ for await (const chunk of assistant.stream('Tell me a story')) {
 Main interface with builder pattern methods:
 - `model(modelName: string, config?: ModelConfig): Agent`
 - `instructions(text: string): Agent`
-- `tools(toolList: Tool[]): Agent`
+- `tools<TParams, TResult>(toolList: Tool<TParams, TResult>[]): Agent`
+- `config(configEntries: Array<{ key: string; value: string }>): Agent`
 - `send(message: string): Promise<AgentResponse>`
 - `stream(message: string): AsyncIterableIterator<AgentResponse>`
 
@@ -117,7 +125,7 @@ interface AgentConfig {
   name: string;
   model: string | ModelDefinition;
   instructions?: string;
-  tools?: Tool[];
+  tools?: Tool<unknown, unknown>[];
 }
 ```
 
@@ -175,22 +183,31 @@ type AgentFactory = {
 ```
 
 #### `ToolFactory`
-Type-safe tool creation:
+Type-safe tool creation with separate config and execute parameters:
 ```typescript
-type ToolFactory = <TParams = unknown, TResult = unknown>(
-  config: CreateToolConfig<TParams, TResult>
-) => Tool<TParams, TResult>;
+type ToolFactory = <TSchema = unknown, TResult = unknown>(
+  config: CreateToolConfig<TSchema>,
+  execute: ToolExecuteFunction<TSchema, TResult>
+) => Tool<InferSchemaType<TSchema>, TResult>;
 ```
 
-#### `CreateToolConfig<TParams, TResult>`
-Configuration for creating tools:
+#### `CreateToolConfig<TSchema>`
+Configuration for creating tools (first parameter):
 ```typescript
-interface CreateToolConfig<TParams = unknown, TResult = unknown> {
+interface CreateToolConfig<TSchema = unknown> {
   name: string;
+  title?: string;
   description: string;
-  schema: ToolSchema<TParams>;
-  execute: (params: TParams) => Promise<TResult>;
+  inputSchema: TSchema;
 }
+```
+
+#### `ToolExecuteFunction<TSchema, TResult>`
+Execute function type (second parameter):
+```typescript
+type ToolExecuteFunction<TSchema = unknown, TResult = unknown> = (
+  params: InferSchemaType<TSchema>
+) => Promise<TResult>;
 ```
 
 ## Features

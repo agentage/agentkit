@@ -7,6 +7,81 @@ import type {
 } from '@agentage/core';
 import OpenAI from 'openai';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import { zodToJsonSchema } from 'zod-to-json-schema';
+
+/**
+ * OpenAI tool definition
+ */
+interface OpenAITool {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parameters: any;
+  };
+}
+
+/**
+ * Convert Zod schema object to JSON Schema
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function convertSchemaToJsonSchema(schema: any): any {
+  // If schema is empty object, return it as-is
+  if (Object.keys(schema).length === 0) {
+    return schema;
+  }
+
+  // Convert each property from Zod to JSON Schema
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+
+  for (const [key, value] of Object.entries(schema)) {
+    // Check if it's a Zod schema
+    if (value && typeof value === 'object' && '_def' in value) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const jsonSchema = zodToJsonSchema(value as any, {
+        $refStrategy: 'none',
+      });
+
+      // Extract the actual schema (remove top-level $schema if present)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { $schema, ...cleanSchema } = jsonSchema as Record<string, unknown>;
+      properties[key] = cleanSchema;
+
+      // Check if the field is optional
+      const def = (value as { _def?: { typeName?: string } })._def;
+      if (def?.typeName !== 'ZodOptional') {
+        required.push(key);
+      }
+    } else {
+      // If not a Zod schema, pass through as-is
+      properties[key] = value;
+    }
+  }
+
+  return {
+    type: 'object',
+    properties,
+    ...(required.length > 0 && { required }),
+  };
+}
+
+/**
+ * Convert agent tool to OpenAI tool format
+ */
+function convertToOpenAITool<TParams = unknown, TResult = unknown>(
+  tool: Tool<TParams, TResult>
+): OpenAITool {
+  return {
+    type: 'function',
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: convertSchemaToJsonSchema(tool.schema),
+    },
+  };
+}
 
 /**
  * Agent builder implementation
@@ -16,8 +91,7 @@ class AgentBuilder implements Agent {
   private _modelName?: string;
   private _modelConfig?: ModelConfig;
   private _instructions?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private _tools?: Tool<any>[];
+  private _tools?: Tool<unknown, unknown>[];
   private _config?: Record<string, string>;
 
   constructor(name: string) {
@@ -35,9 +109,10 @@ class AgentBuilder implements Agent {
     return this;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tools(toolList: Tool<any>[]): Agent {
-    this._tools = toolList;
+  tools<TParams = unknown, TResult = unknown>(
+    toolList: Tool<TParams, TResult>[]
+  ): Agent {
+    this._tools = toolList as Tool<unknown, unknown>[];
     return this;
   }
 
@@ -77,14 +152,7 @@ class AgentBuilder implements Agent {
     messages.push({ role: 'user', content: message });
 
     // Convert tools to OpenAI format
-    const tools = this._tools?.map((tool) => ({
-      type: 'function' as const,
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.schema,
-      },
-    }));
+    const tools = this._tools?.map(convertToOpenAITool);
 
     let response = await openai.chat.completions.create({
       model: modelName,
@@ -117,16 +185,14 @@ class AgentBuilder implements Agent {
 
         // Parse arguments and execute tool
         const args = JSON.parse(toolCall.function.arguments);
-        const toolMessages = await tool.execute(args);
+        const result = await tool.execute(args);
 
-        // Add tool result messages
-        for (const toolMessage of toolMessages) {
-          messages.push({
-            role: 'tool',
-            content: toolMessage.content || '',
-            tool_call_id: toolCall.id,
-          });
-        }
+        // Add tool result message
+        messages.push({
+          role: 'tool',
+          content: JSON.stringify(result),
+          tool_call_id: toolCall.id,
+        });
       }
 
       // Continue conversation with tool results
@@ -197,3 +263,8 @@ export function agent(nameOrConfig: string | AgentConfig): Agent {
 
   return builder;
 }
+
+/**
+ * Export for testing
+ */
+export { convertToOpenAITool };
