@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@agentage/core": "^0.0.1",
-    "openai": "^4.70.0"
+    "openai": "^6.8.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.13",
