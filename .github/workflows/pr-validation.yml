@@ -56,7 +56,40 @@ jobs:
         id: coverage
         run: npm run test:coverage
 
-      - name: 📊 Validation Summary
+      - name: � Verify Examples
+        id: examples
+        run: |
+          echo "🔍 Verifying examples..."
+          
+          for example_dir in examples/*; do
+            if [ ! -d "$example_dir" ]; then
+              continue
+            fi
+            
+            example_name=$(basename "$example_dir")
+            echo ""
+            echo "📦 Verifying example: $example_name"
+            
+            cd "$example_dir"
+            
+            # Install dependencies
+            npm install
+            
+            # Type check
+            if [ -f "tsconfig.json" ]; then
+              echo "  🔍 Type checking..."
+              npx tsc --noEmit
+            fi
+            
+            cd ../..
+            
+            echo "  ✅ $example_name verified"
+          done
+          
+          echo ""
+          echo "✅ All examples verified successfully!"
+
+      - name: �📊 Validation Summary
         id: validation-summary
         if: always()
         run: |
@@ -73,6 +106,7 @@ jobs:
           | 🏗️ Build | ${{ steps.build.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
           | 🧪 Tests | ${{ steps.test.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
           | 📊 Coverage | ${{ steps.coverage.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+          | 📦 Examples | ${{ steps.examples.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
 
           **Overall:** ${{ job.status == 'success' && '✅ All checks passed!' || '❌ Some checks failed' }}
           COMMENT_EOF
