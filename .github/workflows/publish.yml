@@ -105,9 +105,10 @@ jobs:
             echo "ℹ️  No version changes detected"
           else
             echo "has-changes=true" >> $GITHUB_OUTPUT
-            packages_json=$(printf '%s\n' "${changed_packages[@]}" | jq -s '.')
+            packages_json=$(printf '%s\n' "${changed_packages[@]}" | jq -s -c '.')
             echo "packages=${packages_json}" >> $GITHUB_OUTPUT
-            echo "🎯 Packages to publish: ${packages_json}"
+            echo "🎯 Packages to publish:"
+            echo "${packages_json}" | jq '.'
           fi
 
   verify:
