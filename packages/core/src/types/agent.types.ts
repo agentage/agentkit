@@ -1,3 +1,4 @@
+import type { ConfigEntry } from './config.types.js';
 import type { ModelConfig, ModelDefinition } from './model.types.js';
 import type { Tool, ToolCall } from './tool.types.js';
 
@@ -30,7 +31,7 @@ export interface Agent {
   tools<TParams = unknown, TResult = unknown>(
     toolList: Tool<TParams, TResult>[]
   ): Agent;
-  config(configEntries: Array<{ key: string; value: string }>): Agent;
+  config(configEntries: ConfigEntry[]): Agent;
   send(message: string): Promise<AgentResponse>;
   stream(message: string): AsyncIterableIterator<AgentResponse>;
 }
