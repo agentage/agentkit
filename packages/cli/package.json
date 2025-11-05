@@ -52,7 +52,7 @@
     "inquirer": "^12.10.0",
     "js-yaml": "^4.1.0",
     "yaml": "^2.8.1",
-    "zod": "4.1.12"
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.9",

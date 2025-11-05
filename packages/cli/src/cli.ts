@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { listCommand } from './commands/list.js';
 import { runCommand } from './commands/run.js';
-import { version } from './index';
+import { version } from './index.js';
 
 const program = new Command();
 
