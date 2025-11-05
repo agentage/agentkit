@@ -1,6 +1,6 @@
 {
   "name": "@agentage/core",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Core types and interfaces for AgentKit - the simple SDK for building AI agents in Node.js",
   "type": "module",
   "main": "./dist/index.js",

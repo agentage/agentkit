@@ -4,19 +4,23 @@ import { listCommand } from './list.js';
 
 describe('listCommand', () => {
   const testAgentsDir = 'test-agents';
+  const originalCwd = process.cwd();
 
   beforeEach(() => {
+    // Ensure we're in the original directory
+    process.chdir(originalCwd);
+    
     if (existsSync(testAgentsDir)) {
-      rmSync(testAgentsDir, { recursive: true });
+      rmSync(testAgentsDir, { recursive: true, force: true });
     }
-    mkdirSync(testAgentsDir);
+    mkdirSync(testAgentsDir, { recursive: true });
     process.chdir(testAgentsDir);
   });
 
   afterEach(() => {
-    process.chdir('..');
+    process.chdir(originalCwd);
     if (existsSync(testAgentsDir)) {
-      rmSync(testAgentsDir, { recursive: true });
+      rmSync(testAgentsDir, { recursive: true, force: true });
     }
   });
 

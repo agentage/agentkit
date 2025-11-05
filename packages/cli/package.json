@@ -1,10 +1,11 @@
 {
   "name": "@agentage/cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "CLI tool for creating and running AI agents locally",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
+    "agent": "./dist/cli.js",
     "agentkit": "./dist/cli.js"
   },
   "scripts": {
@@ -43,8 +44,8 @@
     "npm": ">=10.0.0"
   },
   "dependencies": {
-    "@agentage/core": "^0.0.1",
-    "@agentage/sdk": "^0.0.1",
+    "@agentage/core": "^0.1.0",
+    "@agentage/sdk": "^0.1.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "gray-matter": "^4.0.3",
