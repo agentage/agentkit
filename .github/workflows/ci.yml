@@ -13,7 +13,7 @@ env:
 
 jobs:
   test:
-    name: 🧪 Test
+    name: 🧪 Verify Packages
     runs-on: ubuntu-latest
 
     steps:
@@ -70,7 +70,7 @@ jobs:
       - name: 🔍 Verify examples
         run: |
           echo "🔍 Verifying examples..."
-          
+
           for example_dir in examples/*; do
             if [ ! -d "$example_dir" ]; then
               continue
@@ -95,6 +95,6 @@ jobs:
             
             echo "  ✅ $example_name verified"
           done
-          
+
           echo ""
           echo "✅ All examples verified successfully!"

@@ -27,11 +27,6 @@ import type {
   EnvironmentConfig
 } from '@agentage/core';
 
-// Use types in your implementation
-const createAgent = (config: AgentConfig): Agent => {
-  // Your implementation
-};
-
 // Example: Result type usage
 const divide = (a: number, b: number): Result<number, string> => {
   if (b === 0) {

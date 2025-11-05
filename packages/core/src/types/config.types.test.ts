@@ -1,5 +1,9 @@
 import { describe, expect, it } from '@jest/globals';
-import type { ConfigEntry, EnvironmentConfig, RuntimeConfig } from './config.types.js';
+import type {
+  ConfigEntry,
+  EnvironmentConfig,
+  RuntimeConfig,
+} from './config.types.js';
 
 describe('Config Types', () => {
   describe('ConfigEntry', () => {
