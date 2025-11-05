@@ -35,8 +35,9 @@
     "npm": ">=10.0.0"
   },
   "dependencies": {
-    "@agentage/core": "^0.0.1",
-    "openai": "^4.70.0",
+    "@agentage/core": "0.0.1",
+    "openai": "4.104.0",
+    "zod": "3.25.76",
     "zod-to-json-schema": "3.24.6"
   },
   "devDependencies": {

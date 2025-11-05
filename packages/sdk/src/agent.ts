@@ -8,6 +8,12 @@ import type {
 import OpenAI from 'openai';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import {
+  MissingApiKeyError,
+  NotImplementedError,
+  ToolNotFoundError,
+  UnsupportedModelError,
+} from './errors.js';
 
 /**
  * OpenAI tool definition
@@ -129,16 +135,12 @@ class AgentBuilder implements Agent {
 
     // Only support GPT-4 for now
     if (!modelName.startsWith('gpt-4')) {
-      throw new Error(
-        `Model ${modelName} not supported. Only gpt-4 models are supported.`
-      );
+      throw new UnsupportedModelError(modelName);
     }
 
     const apiKey = this._config?.OPENAI_API_KEY;
     if (!apiKey) {
-      throw new Error(
-        'API key required. Use .config([{ key: "OPENAI_API_KEY", value: "..." }])'
-      );
+      throw new MissingApiKeyError();
     }
 
     const openai = new OpenAI({ apiKey });
@@ -180,7 +182,7 @@ class AgentBuilder implements Agent {
           (t) => t.name === toolCall.function.name
         );
         if (!tool) {
-          throw new Error(`Tool ${toolCall.function.name} not found`);
+          throw new ToolNotFoundError(toolCall.function.name);
         }
 
         // Parse arguments and execute tool
@@ -220,8 +222,7 @@ class AgentBuilder implements Agent {
   }
 
   async *stream(_message: string): AsyncIterableIterator<AgentResponse> {
-    // TODO: Implement streaming
-    throw new Error('Agent.stream() not yet implemented. Use a model adapter.');
+    throw new NotImplementedError('Agent.stream()');
     yield { content: '' }; // Make TypeScript happy
   }
 

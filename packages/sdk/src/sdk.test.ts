@@ -81,20 +81,20 @@ describe('SDK', () => {
 
     it('should throw error when send is called without API key', async () => {
       const assistant = agent('test').model('gpt-4');
-      await expect(assistant.send('hello')).rejects.toThrow('API key required');
+      await expect(assistant.send('hello')).rejects.toThrow('API key is required');
     });
 
     it('should throw error for unsupported model', async () => {
       const assistant = agent('test')
         .model('claude-3')
         .config([{ key: 'OPENAI_API_KEY', value: 'fake-key' }]);
-      await expect(assistant.send('hello')).rejects.toThrow('not supported');
+      await expect(assistant.send('hello')).rejects.toThrow('is not supported');
     });
 
     it('should throw error for stream method', async () => {
       const assistant = agent('test');
       const streamGen = assistant.stream('hello');
-      await expect(streamGen.next()).rejects.toThrow('not yet implemented');
+      await expect(streamGen.next()).rejects.toThrow('is not yet implemented');
     });
   });
 
