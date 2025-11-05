@@ -1,6 +1,6 @@
 {
   "name": "@agentage/sdk",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Simple SDK for building AI agents in Node.js with type-safe tools and model adapters",
   "type": "module",
   "main": "./dist/index.js",
