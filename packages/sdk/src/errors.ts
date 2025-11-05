@@ -23,7 +23,9 @@ export class UnsupportedModelError extends AgentKitError {
  */
 export class MissingApiKeyError extends AgentKitError {
   constructor() {
-    super('API key is required. Use .config([{ key: "OPENAI_API_KEY", value: "..." }])');
+    super(
+      'API key is required. Use .config([{ key: "OPENAI_API_KEY", value: "..." }])'
+    );
     this.name = 'MissingApiKeyError';
   }
 }

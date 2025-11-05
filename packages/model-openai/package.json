@@ -40,7 +40,8 @@
     "npm": ">=10.0.0"
   },
   "dependencies": {
-    "@agentage/core": "*"
+    "@agentage/core": "^0.0.1",
+    "openai": "^4.70.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.13",

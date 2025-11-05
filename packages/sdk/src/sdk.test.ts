@@ -81,7 +81,9 @@ describe('SDK', () => {
 
     it('should throw error when send is called without API key', async () => {
       const assistant = agent('test').model('gpt-4');
-      await expect(assistant.send('hello')).rejects.toThrow('API key is required');
+      await expect(assistant.send('hello')).rejects.toThrow(
+        'API key is required'
+      );
     });
 
     it('should throw error for unsupported model', async () => {
