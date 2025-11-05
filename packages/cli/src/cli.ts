@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { initCommand } from './commands/init.js';
+import { listCommand } from './commands/list.js';
+import { runCommand } from './commands/run.js';
 import { version } from './index';
 
 const program = new Command();
@@ -14,28 +17,15 @@ program
   .command('init')
   .description('Initialize a new agent')
   .argument('[name]', 'Agent name')
-  .action((name?: string) => {
-    console.log(`🚀 Init command ${name ? `for "${name}"` : ''}- coming soon!`);
-  });
+  .action(initCommand);
 
 program
   .command('run')
   .description('Run an agent')
   .argument('<name>', 'Agent name')
   .argument('[prompt]', 'Prompt to send to the agent')
-  .action((name: string, prompt?: string) => {
-    console.log(
-      `▶️  Run command for "${name}"${
-        prompt ? ` with prompt: "${prompt}"` : ''
-      } - coming soon!`
-    );
-  });
+  .action(runCommand);
 
-program
-  .command('list')
-  .description('List all agents')
-  .action(() => {
-    console.log('📋 List command - coming soon!');
-  });
+program.command('list').description('List all agents').action(listCommand);
 
 program.parse();

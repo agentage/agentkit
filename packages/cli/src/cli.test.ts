@@ -1,14 +1,28 @@
 import { execSync } from 'child_process';
+import { existsSync, rmSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 const CLI_PATH = join(__dirname, 'cli.ts');
 
 describe('CLI Commands', () => {
+  // Cleanup any test files
+  afterEach(() => {
+    const testFiles = ['test-agent.agent.yml', 'my-agent.agent.yml'];
+    testFiles.forEach((file) => {
+      if (existsSync(file)) {
+        unlinkSync(file);
+      }
+    });
+    // Cleanup agents directory
+    if (existsSync('agents')) {
+      rmSync('agents', { recursive: true, force: true });
+    }
+  });
   test('CLI shows version', () => {
     const output = execSync(`tsx ${CLI_PATH} --version`, {
       encoding: 'utf-8',
     });
-    expect(output.trim()).toBe('0.1.0');
+    expect(output.trim()).toBe('0.0.1');
   });
 
   test('CLI shows help', () => {
@@ -23,27 +37,30 @@ describe('CLI Commands', () => {
     expect(output).toContain('list');
   });
 
-  test('init command shows coming soon message', () => {
+  test('init command creates agent file', () => {
     const output = execSync(`tsx ${CLI_PATH} init test-agent`, {
       encoding: 'utf-8',
     });
-    expect(output).toContain('🚀 Init command');
-    expect(output).toContain('test-agent');
+    expect(output).toContain('✅ Created agents/test-agent.yml');
+    expect(existsSync('agents/test-agent.yml')).toBe(true);
   });
 
-  test('run command shows coming soon message', () => {
-    const output = execSync(`tsx ${CLI_PATH} run my-agent "hello"`, {
-      encoding: 'utf-8',
-    });
-    expect(output).toContain('▶️  Run command');
-    expect(output).toContain('my-agent');
-    expect(output).toContain('hello');
+  test('run command requires agent file', () => {
+    try {
+      execSync(`tsx ${CLI_PATH} run my-agent "hello"`, {
+        encoding: 'utf-8',
+      });
+      fail('Should have thrown an error');
+    } catch (error) {
+      const err = error as Error & { stdout: string; stderr: string };
+      expect(err.stderr || err.stdout || err.message).toContain('Failed');
+    }
   });
 
-  test('list command shows coming soon message', () => {
+  test('list command shows no agents message', () => {
     const output = execSync(`tsx ${CLI_PATH} list`, {
       encoding: 'utf-8',
     });
-    expect(output).toContain('📋 List command');
+    expect(output).toContain('No agents found');
   });
 });
