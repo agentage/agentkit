@@ -1,7 +1,7 @@
 {
   "name": "@agentage/sdk",
   "version": "0.0.1",
-  "description": "AgentKit SDK - Interface definitions and core types",
+  "description": "Simple SDK for building AI agents in Node.js with type-safe tools and model adapters",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,7 +35,7 @@
     "npm": ">=10.0.0"
   },
   "dependencies": {
-    "@agentage/core": "0.0.1",
+    "@agentage/core": "^0.0.1",
     "openai": "4.104.0",
     "zod": "3.25.76",
     "zod-to-json-schema": "3.24.6"
