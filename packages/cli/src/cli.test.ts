@@ -22,7 +22,7 @@ describe('CLI Commands', () => {
     const output = execSync(`tsx ${CLI_PATH} --version`, {
       encoding: 'utf-8',
     });
-    expect(output.trim()).toBe('0.1.0');
+    expect(output.trim()).toBe('0.1.1');
   });
 
   test('CLI shows help', () => {
