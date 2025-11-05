@@ -43,14 +43,14 @@
   },
   "homepage": "https://github.com/agentage/agentkit#readme",
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.46.2",
-    "eslint": "^9.39.0",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.1.1",
-    "tsx": "^4.6.0",
-    "typescript": "^5.3.0"
+    "@types/jest": "30.0.0",
+    "@types/node": "20.19.24",
+    "@typescript-eslint/eslint-plugin": "8.46.3",
+    "@typescript-eslint/parser": "8.46.3",
+    "eslint": "9.39.1",
+    "jest": "30.2.0",
+    "ts-jest": "29.4.5",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
   }
 }

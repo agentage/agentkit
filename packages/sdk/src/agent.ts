@@ -178,6 +178,11 @@ class AgentBuilder implements Agent {
 
       // Execute each tool call and add tool messages
       for (const toolCall of choice.message.tool_calls) {
+        // OpenAI v6 uses union type, we only handle function tool calls
+        if (toolCall.type !== 'function') {
+          continue;
+        }
+
         const tool = this._tools?.find(
           (t) => t.name === toolCall.function.name
         );
