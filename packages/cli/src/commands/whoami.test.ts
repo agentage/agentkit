@@ -108,9 +108,7 @@ describe('whoamiCommand', () => {
     mockLoadConfig.mockResolvedValue({
       auth: { token: 'test-token' },
     });
-    mockGetMe.mockRejectedValue(
-      new AuthError('Server error', 'server_error')
-    );
+    mockGetMe.mockRejectedValue(new AuthError('Server error', 'server_error'));
 
     await expect(whoamiCommand()).rejects.toThrow('process.exit called');
 
