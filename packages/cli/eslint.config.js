@@ -3,6 +3,9 @@ import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
+    ignores: ['src/__mocks__/**'],
+  },
+  {
     files: ['**/*.ts'],
     languageOptions: {
       parser: tsParser,
