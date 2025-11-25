@@ -3,7 +3,10 @@
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { listCommand } from './commands/list.js';
+import { loginCommand } from './commands/login.js';
+import { logoutCommand } from './commands/logout.js';
 import { runCommand } from './commands/run.js';
+import { whoamiCommand } from './commands/whoami.js';
 import { version } from './index.js';
 
 const program = new Command();
@@ -27,5 +30,21 @@ program
   .action(runCommand);
 
 program.command('list').description('List all agents').action(listCommand);
+
+// Auth commands
+program
+  .command('login')
+  .description('Login to the Agentage registry')
+  .action(loginCommand);
+
+program
+  .command('logout')
+  .description('Logout from the Agentage registry')
+  .action(logoutCommand);
+
+program
+  .command('whoami')
+  .description('Display the currently logged in user')
+  .action(whoamiCommand);
 
 program.parse();
