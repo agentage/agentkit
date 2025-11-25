@@ -116,6 +116,80 @@ describe('auth.service', () => {
         'Login timed out'
       );
     });
+
+    it('continues polling on authorization_pending then succeeds', async () => {
+      const tokenResponse = {
+        access_token: 'token123',
+        token_type: 'Bearer',
+      };
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          json: () => Promise.resolve({ error: 'authorization_pending' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(tokenResponse),
+        });
+
+      const result = await pollForToken('device123', 0.01, 60);
+
+      expect(result).toEqual(tokenResponse);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('slows down polling on slow_down error', async () => {
+      const tokenResponse = {
+        access_token: 'token123',
+        token_type: 'Bearer',
+      };
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          json: () => Promise.resolve({ error: 'slow_down' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(tokenResponse),
+        });
+
+      // Note: slow_down adds 5 seconds, but with 0.01 initial interval
+      // it should still complete reasonably fast for testing
+      const result = await pollForToken('device123', 0.001, 60);
+
+      expect(result).toEqual(tokenResponse);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    }, 10000); // Increase timeout for this test
+
+    it('throws on unknown error with description', async () => {
+      mockFetch.mockReset();
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: () =>
+          Promise.resolve({
+            error: 'unknown_error',
+            error_description: 'Something unexpected happened',
+          }),
+      });
+
+      await expect(pollForToken('device123', 0.01, 60)).rejects.toThrow(
+        'Something unexpected happened'
+      );
+    });
+
+    it('throws on unknown error without description', async () => {
+      mockFetch.mockReset();
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ error: 'some_error' }),
+      });
+
+      await expect(pollForToken('device123', 0.01, 60)).rejects.toThrow(
+        'Authentication failed'
+      );
+    });
   });
 
   describe('getMe', () => {
@@ -157,6 +231,32 @@ describe('auth.service', () => {
       });
 
       await expect(getMe()).rejects.toThrow('Session expired');
+    });
+
+    it('throws on other API errors with description', async () => {
+      mockGetAuthToken.mockResolvedValue('token123');
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            error: 'server_error',
+            error_description: 'Internal server error',
+          }),
+      });
+
+      await expect(getMe()).rejects.toThrow('Internal server error');
+    });
+
+    it('throws on other API errors without description', async () => {
+      mockGetAuthToken.mockResolvedValue('token123');
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: () => Promise.resolve({ error: 'server_error' }),
+      });
+
+      await expect(getMe()).rejects.toThrow('Failed to get user info');
     });
   });
 

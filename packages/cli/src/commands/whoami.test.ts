@@ -88,4 +88,85 @@ describe('whoamiCommand', () => {
       expect.stringContaining('Session expired')
     );
   });
+
+  it('handles not_authenticated error', async () => {
+    mockLoadConfig.mockResolvedValue({
+      auth: { token: 'test-token' },
+    });
+    mockGetMe.mockRejectedValue(
+      new AuthError('Not authenticated', 'not_authenticated')
+    );
+
+    await expect(whoamiCommand()).rejects.toThrow('process.exit called');
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Not logged in')
+    );
+  });
+
+  it('handles other AuthError errors', async () => {
+    mockLoadConfig.mockResolvedValue({
+      auth: { token: 'test-token' },
+    });
+    mockGetMe.mockRejectedValue(
+      new AuthError('Server error', 'server_error')
+    );
+
+    await expect(whoamiCommand()).rejects.toThrow('process.exit called');
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Error'),
+      'Server error'
+    );
+  });
+
+  it('handles non-AuthError errors', async () => {
+    mockLoadConfig.mockResolvedValue({
+      auth: { token: 'test-token' },
+    });
+    mockGetMe.mockRejectedValue(new Error('Network error'));
+
+    await expect(whoamiCommand()).rejects.toThrow('process.exit called');
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Error'),
+      'Network error'
+    );
+  });
+
+  it('displays user without name', async () => {
+    mockLoadConfig.mockResolvedValue({
+      auth: { token: 'test-token' },
+    });
+    mockGetMe.mockResolvedValue({
+      id: '123',
+      email: 'test@example.com',
+    });
+
+    await whoamiCommand();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '  Email:',
+      expect.stringContaining('test@example.com')
+    );
+  });
+
+  it('displays user with avatar', async () => {
+    mockLoadConfig.mockResolvedValue({
+      auth: { token: 'test-token' },
+    });
+    mockGetMe.mockResolvedValue({
+      id: '123',
+      email: 'test@example.com',
+      name: 'Test User',
+      avatar: 'https://example.com/avatar.png',
+    });
+
+    await whoamiCommand();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '  Avatar:',
+      expect.stringContaining('https://example.com/avatar.png')
+    );
+  });
 });

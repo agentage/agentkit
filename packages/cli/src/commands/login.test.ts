@@ -116,4 +116,117 @@ describe('loginCommand', () => {
       'Failed'
     );
   });
+
+  it('handles expired token error with hint', async () => {
+    mockLoadConfig.mockResolvedValue({});
+    mockRequestDeviceCode.mockResolvedValue({
+      device_code: 'device123',
+      user_code: 'ABCD-1234',
+      verification_uri: 'https://dev.agentage.io/device',
+      expires_in: 900,
+      interval: 5,
+    });
+    mockPollForToken.mockRejectedValue(
+      new AuthError('Login timed out', 'expired_token')
+    );
+
+    await expect(loginCommand()).rejects.toThrow('process.exit called');
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Login failed'),
+      'Login timed out'
+    );
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Run'),
+      expect.stringContaining('agent login'),
+      expect.stringContaining('to try again')
+    );
+  });
+
+  it('handles non-AuthError errors', async () => {
+    mockLoadConfig.mockResolvedValue({});
+    mockRequestDeviceCode.mockRejectedValue(new Error('Network error'));
+
+    await expect(loginCommand()).rejects.toThrow('process.exit called');
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Login failed'),
+      'Network error'
+    );
+  });
+
+  it('shows email when user has no name', async () => {
+    mockLoadConfig.mockResolvedValue({});
+    mockRequestDeviceCode.mockResolvedValue({
+      device_code: 'device123',
+      user_code: 'ABCD-1234',
+      verification_uri: 'https://dev.agentage.io/device',
+      expires_in: 900,
+      interval: 5,
+    });
+    mockPollForToken.mockResolvedValue({
+      access_token: 'new-token',
+      token_type: 'Bearer',
+      user: { id: '1', email: 'test@example.com' },
+    });
+    mockSaveConfig.mockResolvedValue(undefined);
+
+    await loginCommand();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Logged in as'),
+      expect.stringContaining('test@example.com')
+    );
+  });
+
+  it('shows generic success when no user info', async () => {
+    mockLoadConfig.mockResolvedValue({});
+    mockRequestDeviceCode.mockResolvedValue({
+      device_code: 'device123',
+      user_code: 'ABCD-1234',
+      verification_uri: 'https://dev.agentage.io/device',
+      expires_in: 900,
+      interval: 5,
+    });
+    mockPollForToken.mockResolvedValue({
+      access_token: 'new-token',
+      token_type: 'Bearer',
+    });
+    mockSaveConfig.mockResolvedValue(undefined);
+
+    await loginCommand();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Login successful')
+    );
+  });
+
+  it('handles browser open failure gracefully', async () => {
+    // Mock open to throw an error
+    jest.doMock('open', () => ({
+      default: jest.fn().mockRejectedValue(new Error('Cannot open browser')),
+    }));
+
+    mockLoadConfig.mockResolvedValue({});
+    mockRequestDeviceCode.mockResolvedValue({
+      device_code: 'device123',
+      user_code: 'ABCD-1234',
+      verification_uri: 'https://dev.agentage.io/device',
+      expires_in: 900,
+      interval: 5,
+    });
+    mockPollForToken.mockResolvedValue({
+      access_token: 'new-token',
+      token_type: 'Bearer',
+      user: { id: '1', email: 'test@example.com', name: 'Test User' },
+    });
+    mockSaveConfig.mockResolvedValue(undefined);
+
+    await loginCommand();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Logged in as'),
+      expect.stringContaining('Test User')
+    );
+  });
 });
