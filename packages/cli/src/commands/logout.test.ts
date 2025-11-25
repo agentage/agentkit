@@ -5,14 +5,6 @@ import { logoutCommand } from './logout.js';
 // Mock dependencies
 jest.mock('../services/auth.service.js');
 jest.mock('../utils/config.js');
-jest.mock('chalk', () => ({
-  default: {
-    gray: (s: string) => s,
-    green: (s: string) => s,
-    yellow: (s: string) => s,
-    bold: (s: string) => s,
-  },
-}));
 
 const mockLogout = authService.logout as jest.MockedFunction<
   typeof authService.logout

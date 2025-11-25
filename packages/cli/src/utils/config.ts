@@ -11,16 +11,12 @@ export const DEFAULT_REGISTRY_URL = 'https://dev.agentage.io';
 /**
  * Get the config directory path
  */
-export const getConfigDir = (): string => {
-  return join(homedir(), '.agentage');
-};
+export const getConfigDir = (): string => join(homedir(), '.agentage');
 
 /**
  * Get the config file path
  */
-export const getConfigPath = (): string => {
-  return join(getConfigDir(), 'config.json');
-};
+export const getConfigPath = (): string => join(getConfigDir(), 'config.json');
 
 /**
  * Load configuration from disk

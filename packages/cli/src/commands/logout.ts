@@ -30,7 +30,7 @@ export const logoutCommand = async (): Promise<void> => {
     } else {
       console.log(chalk.green('✅ Logged out successfully.'));
     }
-  } catch (error) {
+  } catch {
     // Even if server logout fails, clear local credentials
     await clearConfig();
     console.log(chalk.green('✅ Logged out locally.'));

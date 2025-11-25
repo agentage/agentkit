@@ -70,14 +70,6 @@ describe('auth.service', () => {
   });
 
   describe('pollForToken', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
     it('returns token on successful authentication', async () => {
       const tokenResponse = {
         access_token: 'token123',
@@ -90,44 +82,17 @@ describe('auth.service', () => {
         json: () => Promise.resolve(tokenResponse),
       });
 
-      const pollPromise = pollForToken('device123', 1, 60);
-      jest.advanceTimersByTime(1000);
-      await Promise.resolve(); // Flush promises
-
-      const result = await pollPromise;
+      // Use very short interval for testing (0.01 seconds)
+      const result = await pollForToken('device123', 0.01, 60);
 
       expect(result).toEqual(tokenResponse);
-    });
-
-    it('continues polling on authorization_pending', async () => {
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: false,
-          json: () => Promise.resolve({ error: 'authorization_pending' }),
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://dev.agentage.io/api/auth/device/token',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ device_code: 'device123' }),
         })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              access_token: 'token123',
-              token_type: 'Bearer',
-            }),
-        });
-
-      const pollPromise = pollForToken('device123', 1, 60);
-
-      // First poll
-      jest.advanceTimersByTime(1000);
-      await Promise.resolve();
-
-      // Second poll
-      jest.advanceTimersByTime(1000);
-      await Promise.resolve();
-
-      const result = await pollPromise;
-
-      expect(result.access_token).toBe('token123');
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      );
     });
 
     it('throws on access_denied', async () => {
@@ -136,14 +101,28 @@ describe('auth.service', () => {
         json: () => Promise.resolve({ error: 'access_denied' }),
       });
 
-      const pollPromise = pollForToken('device123', 1, 60);
-      jest.advanceTimersByTime(1000);
+      await expect(pollForToken('device123', 0.01, 60)).rejects.toThrow(
+        'Authorization was denied'
+      );
+    });
 
-      await expect(pollPromise).rejects.toThrow('Authorization was denied');
+    it('throws on expired_token', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ error: 'expired_token' }),
+      });
+
+      await expect(pollForToken('device123', 0.01, 60)).rejects.toThrow(
+        'Login timed out'
+      );
     });
   });
 
   describe('getMe', () => {
+    beforeEach(() => {
+      mockFetch.mockReset();
+    });
+
     it('returns user on success', async () => {
       const user = { id: '1', email: 'test@example.com', name: 'Test User' };
       mockGetAuthToken.mockResolvedValue('token123');

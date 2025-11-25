@@ -153,6 +153,5 @@ export const logout = async (): Promise<void> => {
 /**
  * Sleep utility
  */
-const sleep = (ms: number): Promise<void> => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));

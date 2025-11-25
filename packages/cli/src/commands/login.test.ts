@@ -1,23 +1,18 @@
 import * as authService from '../services/auth.service.js';
+import { AuthError } from '../services/auth.service.js';
 import * as configUtils from '../utils/config.js';
 import { loginCommand } from './login.js';
 
 // Mock dependencies
-jest.mock('../services/auth.service.js');
+jest.mock('../services/auth.service.js', () => {
+  const original = jest.requireActual('../services/auth.service.js');
+  return {
+    ...original,
+    requestDeviceCode: jest.fn(),
+    pollForToken: jest.fn(),
+  };
+});
 jest.mock('../utils/config.js');
-jest.mock('chalk', () => ({
-  default: {
-    blue: (s: string) => s,
-    cyan: (s: string) => s,
-    gray: (s: string) => s,
-    green: (s: string) => s,
-    yellow: (s: string) => s,
-    red: (s: string) => s,
-    bold: Object.assign((s: string) => s, {
-      yellow: (s: string) => s,
-    }),
-  },
-}));
 jest.mock('open', () => ({
   default: jest.fn(),
 }));
@@ -111,7 +106,7 @@ describe('loginCommand', () => {
   it('handles login errors', async () => {
     mockLoadConfig.mockResolvedValue({});
     mockRequestDeviceCode.mockRejectedValue(
-      new authService.AuthError('Failed', 'request_failed')
+      new AuthError('Failed', 'request_failed')
     );
 
     await expect(loginCommand()).rejects.toThrow('process.exit called');

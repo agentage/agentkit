@@ -1,21 +1,17 @@
 import * as authService from '../services/auth.service.js';
+import { AuthError } from '../services/auth.service.js';
 import * as configUtils from '../utils/config.js';
 import { whoamiCommand } from './whoami.js';
 
 // Mock dependencies
-jest.mock('../services/auth.service.js');
+jest.mock('../services/auth.service.js', () => {
+  const original = jest.requireActual('../services/auth.service.js');
+  return {
+    ...original,
+    getMe: jest.fn(),
+  };
+});
 jest.mock('../utils/config.js');
-jest.mock('chalk', () => ({
-  default: {
-    blue: (s: string) => s,
-    cyan: (s: string) => s,
-    gray: (s: string) => s,
-    green: (s: string) => s,
-    yellow: (s: string) => s,
-    red: (s: string) => s,
-    bold: (s: string) => s,
-  },
-}));
 
 const mockGetMe = authService.getMe as jest.MockedFunction<
   typeof authService.getMe
@@ -82,11 +78,12 @@ describe('whoamiCommand', () => {
       auth: { token: 'expired-token' },
     });
     mockGetMe.mockRejectedValue(
-      new authService.AuthError('Session expired', 'session_expired')
+      new AuthError('Session expired', 'session_expired')
     );
 
     await expect(whoamiCommand()).rejects.toThrow('process.exit called');
 
+    // The code logs "Session expired." (with period and emoji)
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('Session expired')
     );

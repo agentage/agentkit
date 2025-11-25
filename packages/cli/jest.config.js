@@ -5,6 +5,7 @@ export default {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^@agentage/core$': '<rootDir>/../core/src/index.ts',
+    '^chalk$': '<rootDir>/src/__mocks__/chalk.ts',
   },
   transform: {
     '^.+\\.ts$': [
@@ -20,6 +21,7 @@ export default {
     '!src/**/*.test.ts',
     '!src/**/*.d.ts',
     '!src/cli.ts',
+    '!src/__mocks__/**',
   ],
   coverageThreshold: {
     global: {
