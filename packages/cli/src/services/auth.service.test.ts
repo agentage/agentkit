@@ -202,7 +202,7 @@ describe('auth.service', () => {
       mockGetAuthToken.mockResolvedValue('token123');
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(user),
+        json: () => Promise.resolve({ user }),
       });
 
       const result = await getMe();
