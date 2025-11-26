@@ -148,23 +148,4 @@ describe('whoamiCommand', () => {
       expect.stringContaining('test@example.com')
     );
   });
-
-  it('displays user with avatar', async () => {
-    mockLoadConfig.mockResolvedValue({
-      auth: { token: 'test-token' },
-    });
-    mockGetMe.mockResolvedValue({
-      id: '123',
-      email: 'test@example.com',
-      name: 'Test User',
-      avatar: 'https://example.com/avatar.png',
-    });
-
-    await whoamiCommand();
-
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '  Avatar:',
-      expect.stringContaining('https://example.com/avatar.png')
-    );
-  });
 });

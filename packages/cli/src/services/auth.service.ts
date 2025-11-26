@@ -94,6 +94,13 @@ export const pollForToken = async (
 };
 
 /**
+ * API response for /api/auth/me endpoint
+ */
+interface MeResponse {
+  user: User;
+}
+
+/**
  * Get the current authenticated user
  */
 export const getMe = async (): Promise<User> => {
@@ -124,7 +131,8 @@ export const getMe = async (): Promise<User> => {
     );
   }
 
-  return response.json() as Promise<User>;
+  const data = (await response.json()) as MeResponse;
+  return data.user;
 };
 
 /**
