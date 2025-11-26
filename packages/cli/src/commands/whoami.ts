@@ -30,9 +30,6 @@ export const whoamiCommand = async (): Promise<void> => {
     }
     console.log('  Email:', chalk.bold(user.email));
     console.log('  ID:   ', chalk.gray(user.id));
-    if (user.avatar) {
-      console.log('  Avatar:', chalk.gray(user.avatar));
-    }
     console.log();
   } catch (error) {
     if (error instanceof AuthError) {
