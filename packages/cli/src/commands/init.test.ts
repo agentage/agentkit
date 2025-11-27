@@ -3,54 +3,63 @@ import { join } from 'path';
 import { initCommand } from './init.js';
 
 describe('initCommand', () => {
-  const testAgentsDir = 'test-agents';
+  const testDir = 'test-init-workspace';
 
   beforeEach(() => {
-    // Change to a test directory
-    if (existsSync(testAgentsDir)) {
-      rmSync(testAgentsDir, { recursive: true });
+    // Create and change to test directory
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
     }
-    mkdirSync(testAgentsDir);
-    process.chdir(testAgentsDir);
+    mkdirSync(testDir);
+    process.chdir(testDir);
   });
 
   afterEach(() => {
-    // Clean up
+    // Return to parent and clean up
     process.chdir('..');
-    if (existsSync(testAgentsDir)) {
-      rmSync(testAgentsDir, { recursive: true });
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
     }
   });
 
-  test('creates agent file with default name', async () => {
+  test('creates agent.json in current directory and agents folder with default name', async () => {
     await initCommand();
 
-    const filePath = join('agents', 'my-agent.yml');
-    expect(existsSync(filePath)).toBe(true);
+    const agentFilePath = join('agents', 'my-agent.agent.md');
+    const configFilePath = 'agent.json';
 
-    const content = readFileSync(filePath, 'utf-8');
-    expect(content).toContain('name: my-agent');
-    expect(content).toContain('model: gpt-4');
-    expect(content).toContain('You are a helpful AI assistant');
+    expect(existsSync('agents')).toBe(true);
+    expect(existsSync(agentFilePath)).toBe(true);
+    expect(existsSync(configFilePath)).toBe(true);
+
+    const agentContent = readFileSync(agentFilePath, 'utf-8');
+    expect(agentContent).toContain('name: my-agent');
+    expect(agentContent).toContain('You are a helpful AI assistant');
+
+    const configContent = JSON.parse(readFileSync(configFilePath, 'utf-8'));
+    expect(configContent.path).toBe('~/agents/');
   });
 
   test('creates agent file with custom name', async () => {
     await initCommand('custom-agent');
 
-    const filePath = join('agents', 'custom-agent.yml');
-    expect(existsSync(filePath)).toBe(true);
-
-    const content = readFileSync(filePath, 'utf-8');
-    expect(content).toContain('name: custom-agent');
-  });
-
-  test('creates agents directory if it does not exist', async () => {
-    expect(existsSync('agents')).toBe(false);
-
-    await initCommand('test-agent');
+    const agentFilePath = join('agents', 'custom-agent.agent.md');
 
     expect(existsSync('agents')).toBe(true);
-    expect(existsSync(join('agents', 'test-agent.yml'))).toBe(true);
+    expect(existsSync(agentFilePath)).toBe(true);
+
+    const agentContent = readFileSync(agentFilePath, 'utf-8');
+    expect(agentContent).toContain('name: custom-agent');
+  });
+
+  test('creates agent.json config with path property', async () => {
+    await initCommand('test-agent');
+
+    const configFilePath = 'agent.json';
+    expect(existsSync(configFilePath)).toBe(true);
+
+    const configContent = JSON.parse(readFileSync(configFilePath, 'utf-8'));
+    expect(configContent).toEqual({ path: '~/agents/' });
   });
 
   test('handles errors gracefully', async () => {
@@ -59,8 +68,6 @@ describe('initCommand', () => {
     });
     const consoleError = jest.spyOn(console, 'error').mockImplementation();
 
-    // Create a scenario that will fail (read-only directory)
-    mkdirSync('agents');
     const originalWriteFile = require('fs/promises').writeFile;
     jest
       .spyOn(require('fs/promises'), 'writeFile')

@@ -1,23 +1,29 @@
 import { execSync } from 'child_process';
-import { existsSync, rmSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 
 const CLI_PATH = join(__dirname, 'cli.ts');
 
 describe('CLI Commands', () => {
-  // Cleanup any test files
+  const testDir = 'test-cli-workspace';
+
+  beforeEach(() => {
+    // Create and change to test directory
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+    mkdirSync(testDir);
+    process.chdir(testDir);
+  });
+
   afterEach(() => {
-    const testFiles = ['test-agent.agent.yml', 'my-agent.agent.yml'];
-    testFiles.forEach((file) => {
-      if (existsSync(file)) {
-        unlinkSync(file);
-      }
-    });
-    // Cleanup agents directory
-    if (existsSync('agents')) {
-      rmSync('agents', { recursive: true, force: true });
+    // Return to parent and clean up
+    process.chdir('..');
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
     }
   });
+
   test('CLI shows version', () => {
     const output = execSync(`tsx ${CLI_PATH} --version`, {
       encoding: 'utf-8',
@@ -37,12 +43,18 @@ describe('CLI Commands', () => {
     expect(output).toContain('list');
   });
 
-  test('init command creates agent file', () => {
+  test('init command creates agent folder and config', () => {
     const output = execSync(`tsx ${CLI_PATH} init test-agent`, {
       encoding: 'utf-8',
     });
-    expect(output).toContain('✅ Created agents/test-agent.yml');
-    expect(existsSync('agents/test-agent.yml')).toBe(true);
+    const expectedAgentPath = join('agents', 'test-agent.agent.md');
+    const expectedConfigPath = 'agent.json';
+
+    expect(output).toContain('✅ Created');
+    expect(output).toContain('test-agent.agent.md');
+    expect(output).toContain('agent.json');
+    expect(existsSync(expectedAgentPath)).toBe(true);
+    expect(existsSync(expectedConfigPath)).toBe(true);
   });
 
   test('run command requires agent file', () => {
