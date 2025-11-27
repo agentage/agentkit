@@ -2,6 +2,8 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
+  // Run tests sequentially to avoid race conditions with process.chdir in tests
+  maxWorkers: 1,
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^@agentage/core$': '<rootDir>/../core/src/index.ts',
