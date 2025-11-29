@@ -1,9 +1,13 @@
+import chalk from 'chalk';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import {
+  getInstalledVersion,
+  getLatestVersion,
+  PACKAGE_NAME,
+} from '../utils/version.js';
 
 const execAsync = promisify(exec);
-
-const PACKAGE_NAME = '@agentage/cli';
 
 export interface UpdateResult {
   success: boolean;
@@ -12,49 +16,44 @@ export interface UpdateResult {
   message: string;
 }
 
-const getInstalledVersion = async (): Promise<string> => {
-  try {
-    // Check globally installed version
-    const { stdout } = await execAsync(`npm list -g ${PACKAGE_NAME} --json`);
-    const data = JSON.parse(stdout);
-    return data.dependencies?.[PACKAGE_NAME]?.version || 'unknown';
-  } catch {
-    return 'unknown';
-  }
-};
-
-const getLatestVersion = async (): Promise<string> => {
-  try {
-    const { stdout } = await execAsync(`npm view ${PACKAGE_NAME} version`);
-    return stdout.trim();
-  } catch {
-    throw new Error('Failed to fetch latest version from npm registry');
-  }
-};
-
 export const updateCommand = async (): Promise<void> => {
-  console.log('🔄 Checking for updates...');
+  console.log(chalk.cyan('🔄 Checking for updates...'));
 
   try {
     const previousVersion = await getInstalledVersion();
     const latestVersion = await getLatestVersion();
 
+    if (latestVersion === 'unknown') {
+      console.error(
+        chalk.red('❌ Failed to fetch latest version from npm registry')
+      );
+      process.exit(1);
+    }
+
     if (previousVersion === latestVersion) {
-      console.log(`✅ Already on the latest version (${latestVersion})`);
+      console.log(
+        chalk.green(`✅ Already on the latest version (${latestVersion})`)
+      );
       return;
     }
 
     console.log(
-      `📦 Updating ${PACKAGE_NAME} from ${previousVersion} to ${latestVersion}...`
+      chalk.yellow(
+        `📦 Updating ${PACKAGE_NAME} from ${chalk.red(
+          previousVersion
+        )} to ${chalk.green.bold(latestVersion)}...`
+      )
     );
 
     await execAsync(`npm install -g ${PACKAGE_NAME}@latest`);
 
     const currentVersion = await getInstalledVersion();
 
-    console.log(`✅ Successfully updated to version ${currentVersion}`);
+    console.log(
+      chalk.green.bold(`✅ Successfully updated to version ${currentVersion}`)
+    );
   } catch (error) {
-    console.error(`❌ Update failed: ${(error as Error).message}`);
+    console.error(chalk.red(`❌ Update failed: ${(error as Error).message}`));
     process.exit(1);
   }
 };

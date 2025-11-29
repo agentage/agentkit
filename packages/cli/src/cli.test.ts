@@ -35,9 +35,7 @@ describe('CLI Commands', () => {
     const output = execSync(`tsx ${CLI_PATH} --help`, {
       encoding: 'utf-8',
     });
-    expect(output).toContain(
-      'CLI tool for creating and running AI agents locally'
-    );
+    expect(output).toContain('AgentKit CLI');
     expect(output).toContain('init');
     expect(output).toContain('run');
     expect(output).toContain('list');
