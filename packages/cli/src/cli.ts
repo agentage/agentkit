@@ -54,7 +54,11 @@ const displayVersionInfo = async (): Promise<void> => {
 };
 
 const displayCustomHelp = (): void => {
-  console.log(chalk.white.bold('  Usage: ') + chalk.cyan('agent') + chalk.gray(' [command] [options]'));
+  console.log(
+    chalk.white.bold('  Usage: ') +
+      chalk.cyan('agent') +
+      chalk.gray(' [command] [options]')
+  );
   console.log();
   console.log(chalk.white.bold('  Commands:'));
   console.log();
@@ -63,10 +67,30 @@ const displayCustomHelp = (): void => {
     { cmd: 'init', args: '[name]', desc: 'Initialize a new agent', icon: '🚀' },
     { cmd: 'run', args: '<name> [prompt]', desc: 'Run an agent', icon: '▶️ ' },
     { cmd: 'list', args: '', desc: 'List all agents', icon: '📋' },
-    { cmd: 'login', args: '', desc: 'Login to the Agentage registry', icon: '🔐' },
-    { cmd: 'logout', args: '', desc: 'Logout from the Agentage registry', icon: '🚪' },
-    { cmd: 'whoami', args: '', desc: 'Display the currently logged in user', icon: '👤' },
-    { cmd: 'update', args: '', desc: 'Update the CLI to the latest version', icon: '⬆️ ' },
+    {
+      cmd: 'login',
+      args: '',
+      desc: 'Login to the Agentage registry',
+      icon: '🔐',
+    },
+    {
+      cmd: 'logout',
+      args: '',
+      desc: 'Logout from the Agentage registry',
+      icon: '🚪',
+    },
+    {
+      cmd: 'whoami',
+      args: '',
+      desc: 'Display the currently logged in user',
+      icon: '👤',
+    },
+    {
+      cmd: 'update',
+      args: '',
+      desc: 'Update the CLI to the latest version',
+      icon: '⬆️ ',
+    },
   ];
 
   for (const { cmd, args, desc, icon } of commands) {
@@ -78,13 +102,25 @@ const displayCustomHelp = (): void => {
   console.log();
   console.log(chalk.white.bold('  Options:'));
   console.log();
-  console.log(`    ${chalk.cyan.bold('-v, --version')}   ${chalk.white('Display version number')}`);
-  console.log(`    ${chalk.cyan.bold('-h, --help')}      ${chalk.white('Display this help message')}`);
+  console.log(
+    `    ${chalk.cyan.bold('-v, --version')}   ${chalk.white(
+      'Display version number'
+    )}`
+  );
+  console.log(
+    `    ${chalk.cyan.bold('-h, --help')}      ${chalk.white(
+      'Display this help message'
+    )}`
+  );
   console.log();
   console.log(chalk.white.bold('  Examples:'));
   console.log();
   console.log(chalk.white('    $ ') + chalk.cyan('agent init my-agent'));
-  console.log(chalk.white('    $ ') + chalk.cyan('agent run my-agent') + chalk.white(' "Hello, how are you?"'));
+  console.log(
+    chalk.white('    $ ') +
+      chalk.cyan('agent run my-agent') +
+      chalk.white(' "Hello, how are you?"')
+  );
   console.log(chalk.white('    $ ') + chalk.cyan('agent list'));
   console.log();
 };

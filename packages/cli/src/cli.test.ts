@@ -28,7 +28,8 @@ describe('CLI Commands', () => {
     const output = execSync(`tsx ${CLI_PATH} --version`, {
       encoding: 'utf-8',
     });
-    expect(output.trim()).toBe('0.1.2');
+    // Version is read from package.json dynamically
+    expect(output.trim()).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   test('CLI shows help', () => {
