@@ -14,11 +14,10 @@ export interface UpdateResult {
 
 const getInstalledVersion = async (): Promise<string> => {
   try {
-    const { stdout } = await execAsync(`npm list ${PACKAGE_NAME} --json`);
+    // Check globally installed version
+    const { stdout } = await execAsync(`npm list -g ${PACKAGE_NAME} --json`);
     const data = JSON.parse(stdout);
-    return (
-      data.dependencies?.[PACKAGE_NAME]?.version || data.version || 'unknown'
-    );
+    return data.dependencies?.[PACKAGE_NAME]?.version || 'unknown';
   } catch {
     return 'unknown';
   }
