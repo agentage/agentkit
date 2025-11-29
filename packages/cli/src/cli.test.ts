@@ -41,6 +41,7 @@ describe('CLI Commands', () => {
     expect(output).toContain('init');
     expect(output).toContain('run');
     expect(output).toContain('list');
+    expect(output).toContain('update');
   });
 
   test('init command creates agent folder and config', () => {

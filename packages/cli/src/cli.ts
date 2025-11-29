@@ -6,6 +6,7 @@ import { listCommand } from './commands/list.js';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
 import { runCommand } from './commands/run.js';
+import { updateCommand } from './commands/update.js';
 import { whoamiCommand } from './commands/whoami.js';
 import { version } from './index.js';
 
@@ -46,5 +47,10 @@ program
   .command('whoami')
   .description('Display the currently logged in user')
   .action(whoamiCommand);
+
+program
+  .command('update')
+  .description('Update the CLI to the latest version')
+  .action(updateCommand);
 
 program.parse();
