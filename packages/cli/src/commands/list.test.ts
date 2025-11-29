@@ -9,7 +9,7 @@ describe('listCommand', () => {
   beforeEach(() => {
     // Ensure we're in the original directory
     process.chdir(originalCwd);
-    
+
     if (existsSync(testAgentsDir)) {
       rmSync(testAgentsDir, { recursive: true, force: true });
     }
@@ -30,7 +30,7 @@ describe('listCommand', () => {
     await listCommand();
 
     expect(consoleLog).toHaveBeenCalledWith(
-      'No agents found. Run `agentkit init` to create one.'
+      'No agents found. Run `agent init` to create one.'
     );
 
     consoleLog.mockRestore();
@@ -43,7 +43,7 @@ describe('listCommand', () => {
     await listCommand();
 
     expect(consoleLog).toHaveBeenCalledWith(
-      'No agents found. Run `agentkit init` to create one.'
+      'No agents found. Run `agent init` to create one.'
     );
 
     consoleLog.mockRestore();

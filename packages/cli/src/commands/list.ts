@@ -11,12 +11,12 @@ export const listCommand = async (): Promise<void> => {
     try {
       files = (await readdir(agentsDir)).filter((f) => f.endsWith('.yml'));
     } catch {
-      console.log('No agents found. Run `agentkit init` to create one.');
+      console.log('No agents found. Run `agent init` to create one.');
       return;
     }
 
     if (files.length === 0) {
-      console.log('No agents found. Run `agentkit init` to create one.');
+      console.log('No agents found. Run `agent init` to create one.');
       return;
     }
 
