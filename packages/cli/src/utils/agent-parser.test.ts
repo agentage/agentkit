@@ -95,12 +95,20 @@ Be kind and helpful.`;
   describe('parseAgentIdentifier', () => {
     test('parses owner/name format', () => {
       const result = parseAgentIdentifier('owner/my-agent');
-      expect(result).toEqual({ owner: 'owner', name: 'my-agent', version: undefined });
+      expect(result).toEqual({
+        owner: 'owner',
+        name: 'my-agent',
+        version: undefined,
+      });
     });
 
     test('parses owner/name@version format', () => {
       const result = parseAgentIdentifier('owner/my-agent@2025-11-30');
-      expect(result).toEqual({ owner: 'owner', name: 'my-agent', version: '2025-11-30' });
+      expect(result).toEqual({
+        owner: 'owner',
+        name: 'my-agent',
+        version: '2025-11-30',
+      });
     });
 
     test('parses name-only format', () => {

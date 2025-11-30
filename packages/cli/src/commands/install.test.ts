@@ -7,7 +7,11 @@ jest.mock('../services/registry.service.js', () => ({
   getAgent: jest.fn(),
   getAgentVersion: jest.fn(),
   RegistryApiError: class extends Error {
-    constructor(message: string, public code: string, public statusCode: number) {
+    constructor(
+      message: string,
+      public code: string,
+      public statusCode: number
+    ) {
       super(message);
     }
   },
@@ -28,7 +32,7 @@ describe('installCommand', () => {
     mkdirSync(testDir, { recursive: true });
     process.chdir(testDir);
     jest.clearAllMocks();
-    
+
     mockExit = jest.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit(${code})`);
     });
@@ -69,7 +73,10 @@ describe('installCommand', () => {
     await installCommand('testuser/test-agent');
 
     expect(existsSync(join('agents', 'test-agent.agent.md'))).toBe(true);
-    const content = readFileSync(join('agents', 'test-agent.agent.md'), 'utf-8');
+    const content = readFileSync(
+      join('agents', 'test-agent.agent.md'),
+      'utf-8'
+    );
     expect(content).toContain('name: test-agent');
 
     expect(mockConsoleLog).toHaveBeenCalledWith(
@@ -89,7 +96,10 @@ describe('installCommand', () => {
 
     await installCommand('testuser/test-agent@2025-11-01');
 
-    const content = readFileSync(join('agents', 'test-agent.agent.md'), 'utf-8');
+    const content = readFileSync(
+      join('agents', 'test-agent.agent.md'),
+      'utf-8'
+    );
     expect(content).toContain('version: 2025-11-01');
   });
 
@@ -119,7 +129,10 @@ describe('installCommand', () => {
     );
 
     // Verify file was not overwritten
-    const content = readFileSync(join('agents', 'test-agent.agent.md'), 'utf-8');
+    const content = readFileSync(
+      join('agents', 'test-agent.agent.md'),
+      'utf-8'
+    );
     expect(content).toBe('existing content');
   });
 
@@ -139,7 +152,105 @@ describe('installCommand', () => {
 
     await installCommand('testuser/test-agent', { force: true });
 
-    const content = readFileSync(join('agents', 'test-agent.agent.md'), 'utf-8');
+    const content = readFileSync(
+      join('agents', 'test-agent.agent.md'),
+      'utf-8'
+    );
     expect(content).toContain('New content');
+  });
+
+  test('installs to global directory with --global flag', async () => {
+    const { getAgent } = require('../services/registry.service.js');
+
+    getAgent.mockResolvedValue({
+      name: 'test-agent',
+      owner: 'testuser',
+      latestVersion: '2025-11-30',
+      latestContent: '---\nname: test-agent\n---\nContent',
+    });
+
+    await installCommand('testuser/test-agent', { global: true });
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('Installed')
+    );
+  });
+
+  test('installs to local directory with --local flag', async () => {
+    const { getAgent } = require('../services/registry.service.js');
+
+    getAgent.mockResolvedValue({
+      name: 'test-agent',
+      owner: 'testuser',
+      latestVersion: '2025-11-30',
+      latestContent: '---\nname: test-agent\n---\nContent',
+    });
+
+    await installCommand('testuser/test-agent', { local: true });
+
+    expect(existsSync(join('agents', 'test-agent.agent.md'))).toBe(true);
+  });
+
+  test('handles 404 error', async () => {
+    const { getAgent, RegistryApiError } = require('../services/registry.service.js');
+
+    getAgent.mockRejectedValue(
+      new RegistryApiError('Not found', 'not_found', 404)
+    );
+
+    writeFileSync('agent.json', '{}');
+
+    await expect(installCommand('testuser/nonexistent')).rejects.toThrow('process.exit(1)');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('not found')
+    );
+  });
+
+  test('handles 403 error', async () => {
+    const { getAgent, RegistryApiError } = require('../services/registry.service.js');
+
+    getAgent.mockRejectedValue(
+      new RegistryApiError('Forbidden', 'forbidden', 403)
+    );
+
+    writeFileSync('agent.json', '{}');
+
+    await expect(installCommand('testuser/private-agent')).rejects.toThrow('process.exit(1)');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('Access denied')
+    );
+  });
+
+  test('handles version without content', async () => {
+    const { getAgentVersion } = require('../services/registry.service.js');
+
+    getAgentVersion.mockResolvedValue({
+      version: '2025-11-01',
+      content: null,
+    });
+
+    writeFileSync('agent.json', '{}');
+
+    await expect(installCommand('testuser/test-agent@2025-11-01')).rejects.toThrow('process.exit(1)');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('not available')
+    );
+  });
+
+  test('handles generic error', async () => {
+    const { getAgent } = require('../services/registry.service.js');
+
+    getAgent.mockRejectedValue(new Error('Network error'));
+
+    writeFileSync('agent.json', '{}');
+
+    await expect(installCommand('testuser/test-agent')).rejects.toThrow('process.exit(1)');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('Network error')
+    );
   });
 });

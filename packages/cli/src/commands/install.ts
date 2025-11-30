@@ -93,7 +93,7 @@ export const installCommand = async (
       } catch {
         // File doesn't exist, good
       }
-      
+
       if (fileExists) {
         console.error(chalk.red(`❌ Agent already exists at ${filePath}`));
         console.log(chalk.gray('   Use --force to overwrite.'));

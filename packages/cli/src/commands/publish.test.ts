@@ -10,7 +10,11 @@ jest.mock('../utils/config.js', () => ({
 jest.mock('../services/registry.service.js', () => ({
   publishAgent: jest.fn(),
   RegistryApiError: class extends Error {
-    constructor(message: string, public code: string, public statusCode: number) {
+    constructor(
+      message: string,
+      public code: string,
+      public statusCode: number
+    ) {
       super(message);
     }
   },
@@ -142,6 +146,221 @@ Content`;
 
     mockExit.mockRestore();
     mockConsoleError.mockRestore();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('finds agent with explicit path', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+    const { publishAgent } = require('../services/registry.service.js');
+
+    getAuthToken.mockResolvedValue('test-token');
+    publishAgent.mockResolvedValue({
+      name: 'my-agent',
+      owner: 'testuser',
+      version: '2025-11-30',
+    });
+
+    const agentContent = `---
+name: my-agent
+description: Test agent
+---
+You are helpful.`;
+    writeFileSync('my-agent.agent.md', agentContent);
+
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await publishCommand('my-agent.agent.md');
+
+    expect(publishAgent).toHaveBeenCalled();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('finds agent with name without extension', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+    const { publishAgent } = require('../services/registry.service.js');
+
+    getAuthToken.mockResolvedValue('test-token');
+    publishAgent.mockResolvedValue({
+      name: 'my-agent',
+      owner: 'testuser',
+      version: '2025-11-30',
+    });
+
+    const agentContent = `---
+name: my-agent
+---
+Content`;
+    writeFileSync('my-agent.agent.md', agentContent);
+
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await publishCommand('my-agent');
+
+    expect(publishAgent).toHaveBeenCalled();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('finds agent in agents directory', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+    const { publishAgent } = require('../services/registry.service.js');
+
+    getAuthToken.mockResolvedValue('test-token');
+    publishAgent.mockResolvedValue({
+      name: 'my-agent',
+      owner: 'testuser',
+      version: '2025-11-30',
+    });
+
+    mkdirSync('agents');
+    const agentContent = `---
+name: my-agent
+---
+Content`;
+    writeFileSync('agents/my-agent.agent.md', agentContent);
+
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await publishCommand('my-agent');
+
+    expect(publishAgent).toHaveBeenCalled();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('fails when no agent file found', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+    getAuthToken.mockResolvedValue('test-token');
+
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await expect(publishCommand('nonexistent')).rejects.toThrow('process.exit');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('No agent file found')
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('fails when agent has no name', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+    getAuthToken.mockResolvedValue('test-token');
+
+    const agentContent = `---
+description: No name agent
+---
+Content`;
+    writeFileSync('agent.agent.md', agentContent);
+
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await expect(publishCommand()).rejects.toThrow('process.exit');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('must have a name')
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('shows multiple agent files warning', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+    getAuthToken.mockResolvedValue('test-token');
+
+    writeFileSync('agent1.agent.md', '---\nname: a1\n---\n');
+    writeFileSync('agent2.agent.md', '---\nname: a2\n---\n');
+
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await expect(publishCommand()).rejects.toThrow('process.exit');
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('Multiple agent files found')
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('handles RegistryApiError', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+    const {
+      publishAgent,
+      RegistryApiError,
+    } = require('../services/registry.service.js');
+
+    getAuthToken.mockResolvedValue('test-token');
+    publishAgent.mockRejectedValue(
+      new RegistryApiError('Version exists', 'version_exists', 409)
+    );
+
+    const agentContent = `---
+name: my-agent
+---
+Content`;
+    writeFileSync('my-agent.agent.md', agentContent);
+
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await expect(publishCommand()).rejects.toThrow('process.exit');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('Version exists')
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+    mockConsoleLog.mockRestore();
+  });
+
+  test('dry run shows all options', async () => {
+    const { getAuthToken } = require('../utils/config.js');
+
+    getAuthToken.mockResolvedValue('test-token');
+
+    const agentContent = `---
+name: my-agent
+description: A test agent
+version: 1.0.0
+---
+Content`;
+    writeFileSync('my-agent.agent.md', agentContent);
+
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await publishCommand(undefined, {
+      dryRun: true,
+      tag: ['ai', 'test'],
+      changelog: 'Initial release',
+    });
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('Tags')
+    );
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('Changelog')
+    );
+
     mockConsoleLog.mockRestore();
   });
 });

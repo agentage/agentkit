@@ -4,7 +4,11 @@ const mockSearchAgents = jest.fn();
 jest.mock('../services/registry.service.js', () => ({
   searchAgents: mockSearchAgents,
   RegistryApiError: class extends Error {
-    constructor(message: string, public code: string, public statusCode: number) {
+    constructor(
+      message: string,
+      public code: string,
+      public statusCode: number
+    ) {
       super(message);
     }
   },
@@ -111,7 +115,14 @@ describe('searchCommand', () => {
 
   test('shows pagination info when more results exist', async () => {
     mockSearchAgents.mockResolvedValue({
-      agents: [{ name: 'test', owner: 'user', latestVersion: '1.0', totalDownloads: 0 }],
+      agents: [
+        {
+          name: 'test',
+          owner: 'user',
+          latestVersion: '1.0',
+          totalDownloads: 0,
+        },
+      ],
       total: 50,
       page: 1,
       limit: 10,
@@ -122,6 +133,60 @@ describe('searchCommand', () => {
 
     expect(mockConsoleLog).toHaveBeenCalledWith(
       expect.stringContaining('--page 2')
+    );
+  });
+
+  test('handles RegistryApiError', async () => {
+    const { RegistryApiError } = require('../services/registry.service.js');
+    mockSearchAgents.mockRejectedValue(
+      new RegistryApiError('Rate limited', 'rate_limit', 429)
+    );
+
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+
+    await expect(searchCommand('test')).rejects.toThrow('process.exit(1)');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('Rate limited')
+    );
+
+    mockConsoleError.mockRestore();
+  });
+
+  test('handles generic error', async () => {
+    mockSearchAgents.mockRejectedValue(new Error('Network error'));
+
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+
+    await expect(searchCommand('test')).rejects.toThrow('process.exit(1)');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('Network error')
+    );
+
+    mockConsoleError.mockRestore();
+  });
+
+  test('displays result without description', async () => {
+    mockSearchAgents.mockResolvedValue({
+      agents: [
+        {
+          name: 'test-agent',
+          owner: 'testuser',
+          latestVersion: '2025-11-30',
+          totalDownloads: 5,
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+
+    await searchCommand('test');
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('No description')
     );
   });
 });
