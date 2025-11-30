@@ -10,6 +10,8 @@ import { runCommand } from './commands/run.js';
 import { updateCommand } from './commands/update.js';
 import { whoamiCommand } from './commands/whoami.js';
 import { version } from './index.js';
+import { AuthError, getMe } from './services/auth.service.js';
+import { loadConfig } from './utils/config.js';
 import { checkForUpdates } from './utils/version.js';
 
 const displayBanner = (): void => {
@@ -30,6 +32,26 @@ const displayBanner = (): void => {
 
 const displayVersionInfo = async (): Promise<void> => {
   console.log(chalk.gray(`  Version: ${chalk.green.bold(version)}`));
+
+  // Display login status
+  try {
+    const config = await loadConfig();
+    if (config.auth?.token) {
+      const user = await getMe();
+      const displayName = user.name || user.email;
+      console.log(
+        chalk.gray('  Logged in as: ') + chalk.green.bold(displayName)
+      );
+    } else {
+      console.log(chalk.gray('  Status: ') + chalk.yellow('Not logged in'));
+    }
+  } catch (error) {
+    if (error instanceof AuthError && error.code === 'session_expired') {
+      console.log(chalk.gray('  Status: ') + chalk.yellow('Session expired'));
+    } else {
+      console.log(chalk.gray('  Status: ') + chalk.yellow('Not logged in'));
+    }
+  }
 
   try {
     const result = await checkForUpdates(version);
