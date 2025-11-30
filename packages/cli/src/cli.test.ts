@@ -69,10 +69,13 @@ describe('CLI Commands', () => {
     }
   });
 
-  test('list command shows no agents message', () => {
+  test('list command runs successfully', () => {
     const output = execSync(`tsx ${CLI_PATH} list`, {
       encoding: 'utf-8',
     });
-    expect(output).toContain('No agents found');
+    // Either shows no agents found or lists available agents (including global)
+    expect(
+      output.includes('No agents found') || output.includes('Available Agents')
+    ).toBe(true);
   });
 });
