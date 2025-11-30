@@ -49,7 +49,7 @@ describe('listCommand', () => {
     consoleLog.mockRestore();
   });
 
-  test('lists valid agent files', async () => {
+  test('lists valid agent yml files', async () => {
     mkdirSync('agents');
     const validAgent = `name: test-agent
 model: gpt-4
@@ -63,7 +63,29 @@ variables: {}`;
     await listCommand();
 
     expect(consoleLog).toHaveBeenCalledWith('\n📋 Available Agents:\n');
-    expect(consoleLog).toHaveBeenCalledWith('  ✅ test-agent (gpt-4)');
+    expect(consoleLog).toHaveBeenCalledWith('  📁 Local:');
+    expect(consoleLog).toHaveBeenCalledWith('    ✅ test-agent (gpt-4)');
+
+    consoleLog.mockRestore();
+  });
+
+  test('lists valid agent.md files', async () => {
+    mkdirSync('agents');
+    const validAgentMd = `---
+name: my-agent
+description: Test agent
+model: gpt-4o
+---
+You are a helpful assistant.`;
+    writeFileSync(join('agents', 'my-agent.agent.md'), validAgentMd);
+
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await listCommand();
+
+    expect(consoleLog).toHaveBeenCalledWith('\n📋 Available Agents:\n');
+    expect(consoleLog).toHaveBeenCalledWith('  📁 Local:');
+    expect(consoleLog).toHaveBeenCalledWith('    ✅ my-agent (gpt-4o)');
 
     consoleLog.mockRestore();
   });
@@ -104,7 +126,7 @@ model: gpt-4`;
 
     await listCommand();
 
-    expect(consoleLog).toHaveBeenCalledWith('  ✅ valid-agent (gpt-4)');
+    expect(consoleLog).toHaveBeenCalledWith('    ✅ valid-agent (gpt-4)');
     expect(consoleLog).toHaveBeenCalledWith(
       expect.stringContaining('❌ invalid-agent -')
     );
@@ -112,25 +134,35 @@ model: gpt-4`;
     consoleLog.mockRestore();
   });
 
-  test('handles errors gracefully', async () => {
-    mkdirSync('agents');
-    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+  test('uses paths from agent.json config', async () => {
+    mkdirSync('custom-agents');
+    const config = { paths: ['custom-agents/'] };
+    writeFileSync('agent.json', JSON.stringify(config));
 
-    // Mock readdir to throw an error after initial check
-    const originalReaddir = require('fs/promises').readdir;
-    let callCount = 0;
-    jest.spyOn(require('fs/promises'), 'readdir').mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) {
-        return Promise.resolve(['test.yml']);
-      }
-      throw new Error('Read error');
-    });
+    const validAgent = `name: custom-agent
+model: gpt-4
+instructions: Test instructions`;
+    writeFileSync(join('custom-agents', 'custom-agent.yml'), validAgent);
+
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation();
 
     await listCommand();
 
-    // Restore
-    require('fs/promises').readdir = originalReaddir;
-    consoleError.mockRestore();
+    expect(consoleLog).toHaveBeenCalledWith('    ✅ custom-agent (gpt-4)');
+
+    consoleLog.mockRestore();
+  });
+
+  test('handles errors gracefully', async () => {
+    mkdirSync('agents');
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await listCommand();
+
+    expect(consoleLog).toHaveBeenCalledWith(
+      'No agents found. Run `agent init` to create one.'
+    );
+
+    consoleLog.mockRestore();
   });
 });
