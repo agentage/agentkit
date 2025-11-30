@@ -37,7 +37,7 @@ describe('initCommand', () => {
     expect(agentContent).toContain('You are a helpful AI assistant');
 
     const configContent = JSON.parse(readFileSync(configFilePath, 'utf-8'));
-    expect(configContent.path).toBe('~/agents/');
+    expect(configContent.paths).toEqual(['agents/']);
   });
 
   test('creates agent file with custom name', async () => {
@@ -59,7 +59,7 @@ describe('initCommand', () => {
     expect(existsSync(configFilePath)).toBe(true);
 
     const configContent = JSON.parse(readFileSync(configFilePath, 'utf-8'));
-    expect(configContent).toEqual({ path: '~/agents/' });
+    expect(configContent).toEqual({ paths: ['agents/'] });
   });
 
   test('handles errors gracefully', async () => {

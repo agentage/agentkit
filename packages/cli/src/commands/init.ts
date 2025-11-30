@@ -14,7 +14,7 @@ Respond clearly and concisely to user requests.
 `;
 
 export interface AgentConfig {
-  path: string;
+  paths: string[];
 }
 
 export const initCommand = async (name?: string): Promise<void> => {
@@ -26,7 +26,7 @@ export const initCommand = async (name?: string): Promise<void> => {
   const agentContent = sampleAgentTemplate.replace(/{{name}}/g, agentName);
 
   const agentConfig: AgentConfig = {
-    path: '~/agents/',
+    paths: ['agents/'],
   };
 
   try {
