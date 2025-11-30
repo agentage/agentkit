@@ -1,5 +1,5 @@
-import { readdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { readdir, readFile } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 import { parse } from 'yaml';
