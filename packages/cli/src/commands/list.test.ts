@@ -1,6 +1,13 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { homedir } from 'os';
 import { listCommand } from './list.js';
+
+// Mock os.homedir to isolate tests from real global agents
+jest.mock('os', () => ({
+  ...jest.requireActual('os'),
+  homedir: jest.fn(),
+}));
 
 describe('listCommand', () => {
   const testAgentsDir = 'test-agents';
@@ -15,6 +22,9 @@ describe('listCommand', () => {
     }
     mkdirSync(testAgentsDir, { recursive: true });
     process.chdir(testAgentsDir);
+
+    // Mock homedir to return test directory (no global agents)
+    (homedir as jest.Mock).mockReturnValue(testAgentsDir);
   });
 
   afterEach(() => {

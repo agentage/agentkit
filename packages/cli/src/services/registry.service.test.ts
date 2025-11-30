@@ -169,7 +169,11 @@ describe('Registry Service', () => {
 
       const { getAgentVersion } = await import('./registry.service.js');
 
-      const result = await getAgentVersion('testuser', 'test-agent', '2025-11-01');
+      const result = await getAgentVersion(
+        'testuser',
+        'test-agent',
+        '2025-11-01'
+      );
 
       expect(result.version).toBe('2025-11-01');
       expect(mockFetch).toHaveBeenCalledWith(

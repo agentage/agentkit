@@ -1,6 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { homedir } from 'os';
 import { installCommand } from './install.js';
+
+// Mock os.homedir to isolate tests from real global agents directory
+jest.mock('os', () => ({
+  ...jest.requireActual('os'),
+  homedir: jest.fn(),
+}));
 
 // Mock dependencies
 jest.mock('../services/registry.service.js', () => ({
@@ -32,6 +39,9 @@ describe('installCommand', () => {
     mkdirSync(testDir, { recursive: true });
     process.chdir(testDir);
     jest.clearAllMocks();
+
+    // Mock homedir to return test directory
+    (homedir as jest.Mock).mockReturnValue(testDir);
 
     mockExit = jest.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit(${code})`);
@@ -192,7 +202,10 @@ describe('installCommand', () => {
   });
 
   test('handles 404 error', async () => {
-    const { getAgent, RegistryApiError } = require('../services/registry.service.js');
+    const {
+      getAgent,
+      RegistryApiError,
+    } = require('../services/registry.service.js');
 
     getAgent.mockRejectedValue(
       new RegistryApiError('Not found', 'not_found', 404)
@@ -200,7 +213,9 @@ describe('installCommand', () => {
 
     writeFileSync('agent.json', '{}');
 
-    await expect(installCommand('testuser/nonexistent')).rejects.toThrow('process.exit(1)');
+    await expect(installCommand('testuser/nonexistent')).rejects.toThrow(
+      'process.exit(1)'
+    );
 
     expect(mockConsoleError).toHaveBeenCalledWith(
       expect.stringContaining('not found')
@@ -208,7 +223,10 @@ describe('installCommand', () => {
   });
 
   test('handles 403 error', async () => {
-    const { getAgent, RegistryApiError } = require('../services/registry.service.js');
+    const {
+      getAgent,
+      RegistryApiError,
+    } = require('../services/registry.service.js');
 
     getAgent.mockRejectedValue(
       new RegistryApiError('Forbidden', 'forbidden', 403)
@@ -216,7 +234,9 @@ describe('installCommand', () => {
 
     writeFileSync('agent.json', '{}');
 
-    await expect(installCommand('testuser/private-agent')).rejects.toThrow('process.exit(1)');
+    await expect(installCommand('testuser/private-agent')).rejects.toThrow(
+      'process.exit(1)'
+    );
 
     expect(mockConsoleError).toHaveBeenCalledWith(
       expect.stringContaining('Access denied')
@@ -233,7 +253,9 @@ describe('installCommand', () => {
 
     writeFileSync('agent.json', '{}');
 
-    await expect(installCommand('testuser/test-agent@2025-11-01')).rejects.toThrow('process.exit(1)');
+    await expect(
+      installCommand('testuser/test-agent@2025-11-01')
+    ).rejects.toThrow('process.exit(1)');
 
     expect(mockConsoleError).toHaveBeenCalledWith(
       expect.stringContaining('not available')
@@ -247,7 +269,9 @@ describe('installCommand', () => {
 
     writeFileSync('agent.json', '{}');
 
-    await expect(installCommand('testuser/test-agent')).rejects.toThrow('process.exit(1)');
+    await expect(installCommand('testuser/test-agent')).rejects.toThrow(
+      'process.exit(1)'
+    );
 
     expect(mockConsoleError).toHaveBeenCalledWith(
       expect.stringContaining('Network error')
