@@ -22,6 +22,9 @@ const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
 const mockGetRegistryUrl = configUtils.getRegistryUrl as jest.MockedFunction<
   typeof configUtils.getRegistryUrl
 >;
+const mockIsTokenExpired = configUtils.isTokenExpired as jest.MockedFunction<
+  typeof configUtils.isTokenExpired
+>;
 
 describe('whoamiCommand', () => {
   let consoleSpy: jest.SpyInstance;
@@ -36,6 +39,7 @@ describe('whoamiCommand', () => {
       throw new Error('process.exit called');
     });
     mockGetRegistryUrl.mockResolvedValue('https://dev.agentage.io');
+    mockIsTokenExpired.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -51,6 +55,19 @@ describe('whoamiCommand', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('Not logged in')
+    );
+  });
+
+  it('shows expired session when token is locally expired', async () => {
+    mockLoadConfig.mockResolvedValue({
+      auth: { token: 'expired-token', expiresAt: '2020-01-01T00:00:00Z' },
+    });
+    mockIsTokenExpired.mockReturnValue(true);
+
+    await expect(whoamiCommand()).rejects.toThrow('process.exit called');
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Session expired')
     );
   });
 

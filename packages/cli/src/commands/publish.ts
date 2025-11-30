@@ -11,7 +11,7 @@ import {
   isValidAgentName,
   readAgentFile,
 } from '../utils/agent-parser.js';
-import { getAuthToken } from '../utils/config.js';
+import { getAuthStatus } from '../utils/config.js';
 
 interface PublishOptions {
   visibility?: 'public' | 'private';
@@ -91,8 +91,13 @@ export const publishCommand = async (
 ): Promise<void> => {
   try {
     // 1. Check authentication
-    const token = await getAuthToken();
-    if (!token) {
+    const authStatus = await getAuthStatus();
+    if (authStatus.status === 'expired') {
+      console.error(chalk.red('❌ Session expired.'));
+      console.log('Run', chalk.cyan('agent login'), 'to authenticate again.');
+      process.exit(1);
+    }
+    if (authStatus.status === 'not_authenticated') {
       console.error(chalk.red('❌ Not logged in.'));
       console.log('Run', chalk.cyan('agent login'), 'to authenticate.');
       process.exit(1);

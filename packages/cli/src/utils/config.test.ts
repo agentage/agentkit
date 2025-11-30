@@ -4,10 +4,12 @@ import type { AgentageConfig } from '../types/config.types.js';
 import {
   clearConfig,
   DEFAULT_REGISTRY_URL,
+  getAuthStatus,
   getAuthToken,
   getConfigDir,
   getConfigPath,
   getRegistryUrl,
+  isTokenExpired,
   loadConfig,
   saveConfig,
 } from './config.js';
@@ -174,6 +176,93 @@ describe('config utils', () => {
       const result = await getAuthToken();
 
       expect(result).toBeUndefined();
+    });
+
+    it('returns undefined when token is expired', async () => {
+      const pastDate = new Date(Date.now() - 86400000).toISOString(); // 1 day ago
+      const config: AgentageConfig = {
+        auth: { token: 'expired-token', expiresAt: pastDate },
+      };
+      mockReadFile.mockResolvedValue(JSON.stringify(config));
+
+      const result = await getAuthToken();
+
+      expect(result).toBeUndefined();
+    });
+
+    it('returns token when not expired', async () => {
+      const futureDate = new Date(Date.now() + 86400000).toISOString(); // 1 day from now
+      const config: AgentageConfig = {
+        auth: { token: 'valid-token', expiresAt: futureDate },
+      };
+      mockReadFile.mockResolvedValue(JSON.stringify(config));
+
+      const result = await getAuthToken();
+
+      expect(result).toBe('valid-token');
+    });
+  });
+
+  describe('isTokenExpired', () => {
+    it('returns false when expiresAt is undefined', () => {
+      expect(isTokenExpired(undefined)).toBe(false);
+    });
+
+    it('returns true when token is expired', () => {
+      const pastDate = new Date(Date.now() - 86400000).toISOString();
+      expect(isTokenExpired(pastDate)).toBe(true);
+    });
+
+    it('returns false when token is not expired', () => {
+      const futureDate = new Date(Date.now() + 86400000).toISOString();
+      expect(isTokenExpired(futureDate)).toBe(false);
+    });
+
+    it('returns true when token just expired', () => {
+      const now = new Date().toISOString();
+      expect(isTokenExpired(now)).toBe(true);
+    });
+  });
+
+  describe('getAuthStatus', () => {
+    it('returns authenticated with env token', async () => {
+      process.env.AGENTAGE_AUTH_TOKEN = 'env-token';
+
+      const result = await getAuthStatus();
+
+      expect(result).toEqual({ status: 'authenticated', token: 'env-token' });
+    });
+
+    it('returns not_authenticated when no token', async () => {
+      mockReadFile.mockRejectedValue(new Error('ENOENT'));
+
+      const result = await getAuthStatus();
+
+      expect(result).toEqual({ status: 'not_authenticated' });
+    });
+
+    it('returns expired when token is expired', async () => {
+      const pastDate = new Date(Date.now() - 86400000).toISOString();
+      const config: AgentageConfig = {
+        auth: { token: 'expired-token', expiresAt: pastDate },
+      };
+      mockReadFile.mockResolvedValue(JSON.stringify(config));
+
+      const result = await getAuthStatus();
+
+      expect(result).toEqual({ status: 'expired' });
+    });
+
+    it('returns authenticated when token is valid', async () => {
+      const futureDate = new Date(Date.now() + 86400000).toISOString();
+      const config: AgentageConfig = {
+        auth: { token: 'valid-token', expiresAt: futureDate },
+      };
+      mockReadFile.mockResolvedValue(JSON.stringify(config));
+
+      const result = await getAuthStatus();
+
+      expect(result).toEqual({ status: 'authenticated', token: 'valid-token' });
     });
   });
 });

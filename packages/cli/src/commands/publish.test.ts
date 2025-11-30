@@ -3,7 +3,7 @@ import { publishCommand } from './publish.js';
 
 // Mock dependencies
 jest.mock('../utils/config.js', () => ({
-  getAuthToken: jest.fn(),
+  getAuthStatus: jest.fn(),
   getRegistryUrl: jest.fn().mockResolvedValue('https://dev.agentage.io'),
 }));
 
@@ -42,8 +42,8 @@ describe('publishCommand', () => {
   });
 
   test('requires authentication', async () => {
-    const { getAuthToken } = require('../utils/config.js');
-    getAuthToken.mockResolvedValue(null);
+    const { getAuthStatus } = require('../utils/config.js');
+    getAuthStatus.mockResolvedValue({ status: 'not_authenticated' });
 
     const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('process.exit');
@@ -62,11 +62,35 @@ describe('publishCommand', () => {
     mockConsoleLog.mockRestore();
   });
 
+  test('shows expired session message', async () => {
+    const { getAuthStatus } = require('../utils/config.js');
+    getAuthStatus.mockResolvedValue({ status: 'expired' });
+
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit');
+    });
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+    const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
+
+    await expect(publishCommand()).rejects.toThrow('process.exit');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('Session expired')
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+    mockConsoleLog.mockRestore();
+  });
+
   test('finds agent file in current directory', async () => {
-    const { getAuthToken } = require('../utils/config.js');
+    const { getAuthStatus } = require('../utils/config.js');
     const { publishAgent } = require('../services/registry.service.js');
 
-    getAuthToken.mockResolvedValue('test-token');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
     publishAgent.mockResolvedValue({
       name: 'my-agent',
       owner: 'testuser',
@@ -98,10 +122,13 @@ You are helpful.`;
   });
 
   test('supports dry run', async () => {
-    const { getAuthToken } = require('../utils/config.js');
+    const { getAuthStatus } = require('../utils/config.js');
     const { publishAgent } = require('../services/registry.service.js');
 
-    getAuthToken.mockResolvedValue('test-token');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
 
     const agentContent = `---
 name: my-agent
@@ -123,8 +150,11 @@ You are helpful.`;
   });
 
   test('validates agent name', async () => {
-    const { getAuthToken } = require('../utils/config.js');
-    getAuthToken.mockResolvedValue('test-token');
+    const { getAuthStatus } = require('../utils/config.js');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
 
     const agentContent = `---
 name: Invalid-Name
@@ -150,10 +180,13 @@ Content`;
   });
 
   test('finds agent with explicit path', async () => {
-    const { getAuthToken } = require('../utils/config.js');
+    const { getAuthStatus } = require('../utils/config.js');
     const { publishAgent } = require('../services/registry.service.js');
 
-    getAuthToken.mockResolvedValue('test-token');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
     publishAgent.mockResolvedValue({
       name: 'my-agent',
       owner: 'testuser',
@@ -176,10 +209,13 @@ You are helpful.`;
   });
 
   test('finds agent with name without extension', async () => {
-    const { getAuthToken } = require('../utils/config.js');
+    const { getAuthStatus } = require('../utils/config.js');
     const { publishAgent } = require('../services/registry.service.js');
 
-    getAuthToken.mockResolvedValue('test-token');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
     publishAgent.mockResolvedValue({
       name: 'my-agent',
       owner: 'testuser',
@@ -201,10 +237,13 @@ Content`;
   });
 
   test('finds agent in agents directory', async () => {
-    const { getAuthToken } = require('../utils/config.js');
+    const { getAuthStatus } = require('../utils/config.js');
     const { publishAgent } = require('../services/registry.service.js');
 
-    getAuthToken.mockResolvedValue('test-token');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
     publishAgent.mockResolvedValue({
       name: 'my-agent',
       owner: 'testuser',
@@ -227,8 +266,11 @@ Content`;
   });
 
   test('fails when no agent file found', async () => {
-    const { getAuthToken } = require('../utils/config.js');
-    getAuthToken.mockResolvedValue('test-token');
+    const { getAuthStatus } = require('../utils/config.js');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
 
     const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('process.exit');
@@ -248,8 +290,11 @@ Content`;
   });
 
   test('fails when agent has no name', async () => {
-    const { getAuthToken } = require('../utils/config.js');
-    getAuthToken.mockResolvedValue('test-token');
+    const { getAuthStatus } = require('../utils/config.js');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
 
     const agentContent = `---
 description: No name agent
@@ -275,8 +320,11 @@ Content`;
   });
 
   test('shows multiple agent files warning', async () => {
-    const { getAuthToken } = require('../utils/config.js');
-    getAuthToken.mockResolvedValue('test-token');
+    const { getAuthStatus } = require('../utils/config.js');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
 
     writeFileSync('agent1.agent.md', '---\nname: a1\n---\n');
     writeFileSync('agent2.agent.md', '---\nname: a2\n---\n');
@@ -299,13 +347,16 @@ Content`;
   });
 
   test('handles RegistryApiError', async () => {
-    const { getAuthToken } = require('../utils/config.js');
+    const { getAuthStatus } = require('../utils/config.js');
     const {
       publishAgent,
       RegistryApiError,
     } = require('../services/registry.service.js');
 
-    getAuthToken.mockResolvedValue('test-token');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
     publishAgent.mockRejectedValue(
       new RegistryApiError('Version exists', 'version_exists', 409)
     );
@@ -334,9 +385,12 @@ Content`;
   });
 
   test('dry run shows all options', async () => {
-    const { getAuthToken } = require('../utils/config.js');
+    const { getAuthStatus } = require('../utils/config.js');
 
-    getAuthToken.mockResolvedValue('test-token');
+    getAuthStatus.mockResolvedValue({
+      status: 'authenticated',
+      token: 'test-token',
+    });
 
     const agentContent = `---
 name: my-agent
