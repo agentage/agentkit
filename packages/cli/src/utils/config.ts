@@ -75,7 +75,19 @@ export const getRegistryUrl = async (): Promise<string> => {
 };
 
 /**
+ * Check if a token is expired
+ */
+export const isTokenExpired = (expiresAt: string | undefined): boolean => {
+  if (!expiresAt) {
+    return false; // No expiry means token doesn't expire
+  }
+  const expiryDate = new Date(expiresAt);
+  return expiryDate <= new Date();
+};
+
+/**
  * Get the auth token from config or environment
+ * Returns undefined if the token is expired
  */
 export const getAuthToken = async (): Promise<string | undefined> => {
   // Environment variable takes precedence
@@ -86,5 +98,46 @@ export const getAuthToken = async (): Promise<string | undefined> => {
 
   // Check config file
   const config = await loadConfig();
-  return config.auth?.token;
+
+  // Check if token exists and is not expired
+  if (config.auth?.token) {
+    if (isTokenExpired(config.auth.expiresAt)) {
+      return undefined; // Token is expired
+    }
+    return config.auth.token;
+  }
+
+  return undefined;
+};
+
+/**
+ * Auth status types
+ */
+export type AuthStatus =
+  | { status: 'authenticated'; token: string }
+  | { status: 'expired' }
+  | { status: 'not_authenticated' };
+
+/**
+ * Get detailed auth status including whether token is expired
+ */
+export const getAuthStatus = async (): Promise<AuthStatus> => {
+  // Environment variable takes precedence
+  const envToken = process.env.AGENTAGE_AUTH_TOKEN;
+  if (envToken) {
+    return { status: 'authenticated', token: envToken };
+  }
+
+  // Check config file
+  const config = await loadConfig();
+
+  if (!config.auth?.token) {
+    return { status: 'not_authenticated' };
+  }
+
+  if (isTokenExpired(config.auth.expiresAt)) {
+    return { status: 'expired' };
+  }
+
+  return { status: 'authenticated', token: config.auth.token };
 };

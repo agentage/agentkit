@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { AuthError, getMe } from '../services/auth.service.js';
-import { getRegistryUrl, loadConfig } from '../utils/config.js';
+import { getRegistryUrl, isTokenExpired, loadConfig } from '../utils/config.js';
 
 /**
  * Whoami command - display current authenticated user
@@ -13,6 +13,13 @@ export const whoamiCommand = async (): Promise<void> => {
       console.log(chalk.yellow('Not logged in.'));
       console.log('Run', chalk.cyan('agent login'), 'to authenticate.');
       return;
+    }
+
+    // Check if token is expired locally
+    if (isTokenExpired(config.auth.expiresAt)) {
+      console.log(chalk.yellow('⚠️  Session expired.'));
+      console.log('Run', chalk.cyan('agent login'), 'to authenticate again.');
+      process.exit(1);
     }
 
     // Fetch current user from API
