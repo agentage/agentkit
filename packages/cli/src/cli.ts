@@ -3,10 +3,13 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
+import { installCommand } from './commands/install.js';
 import { listCommand } from './commands/list.js';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
+import { publishCommand } from './commands/publish.js';
 import { runCommand } from './commands/run.js';
+import { searchCommand } from './commands/search.js';
 import { updateCommand } from './commands/update.js';
 import { whoamiCommand } from './commands/whoami.js';
 import { version } from './index.js';
@@ -89,6 +92,24 @@ const displayCustomHelp = (): void => {
     { cmd: 'init', args: '[name]', desc: 'Initialize a new agent', icon: '🚀' },
     { cmd: 'run', args: '<name> [prompt]', desc: 'Run an agent', icon: '▶️ ' },
     { cmd: 'list', args: '', desc: 'List all agents', icon: '📋' },
+    {
+      cmd: 'publish',
+      args: '[path]',
+      desc: 'Publish agent to registry',
+      icon: '📤',
+    },
+    {
+      cmd: 'install',
+      args: '<owner/name>',
+      desc: 'Install agent from registry',
+      icon: '📥',
+    },
+    {
+      cmd: 'search',
+      args: '<query>',
+      desc: 'Search for agents',
+      icon: '🔍',
+    },
     {
       cmd: 'login',
       args: '',
@@ -179,6 +200,40 @@ program
   .action(runCommand);
 
 program.command('list').description('List all agents').action(listCommand);
+
+// Registry commands
+program
+  .command('publish')
+  .description('Publish agent to registry')
+  .argument('[path]', 'Path to agent file')
+  .option(
+    '-v, --visibility <visibility>',
+    'Visibility (public or private)',
+    'public'
+  )
+  .option('--version <version>', 'Override version')
+  .option('-t, --tag <tag...>', 'Add tags')
+  .option('-c, --changelog <message>', 'Changelog message')
+  .option('--dry-run', 'Validate without publishing')
+  .action(publishCommand);
+
+program
+  .command('install')
+  .description('Install agent from registry')
+  .argument('<name>', 'Agent name (owner/name[@version])')
+  .option('-g, --global', 'Install to global location')
+  .option('-l, --local', 'Install to local project')
+  .option('-f, --force', 'Overwrite existing')
+  .action(installCommand);
+
+program
+  .command('search')
+  .description('Search for agents in registry')
+  .argument('<query>', 'Search query')
+  .option('-n, --limit <number>', 'Number of results', '10')
+  .option('-p, --page <number>', 'Page number', '1')
+  .option('--json', 'Output as JSON')
+  .action(searchCommand);
 
 // Auth commands
 program

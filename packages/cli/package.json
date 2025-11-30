@@ -1,6 +1,6 @@
 {
   "name": "@agentage/cli",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "CLI tool for creating and running AI agents locally",
   "type": "module",
   "main": "./dist/index.js",

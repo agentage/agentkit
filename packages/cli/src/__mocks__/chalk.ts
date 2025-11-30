@@ -21,6 +21,7 @@ const chalk = {
   green: createChainableColor(),
   yellow: createChainableColor(),
   red: createChainableColor(),
+  white: createChainableColor(),
   bold: createBoldColor(),
 };
 
