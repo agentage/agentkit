@@ -8,6 +8,7 @@ import {
   getAuthToken,
   getConfigDir,
   getConfigPath,
+  getDeviceId,
   getRegistryUrl,
   isTokenExpired,
   loadConfig,
@@ -263,6 +264,51 @@ describe('config utils', () => {
       const result = await getAuthStatus();
 
       expect(result).toEqual({ status: 'authenticated', token: 'valid-token' });
+    });
+  });
+
+  describe('getDeviceId', () => {
+    it('returns existing device ID from config', async () => {
+      const config: AgentageConfig = {
+        deviceId: 'existing-device-id-12345678',
+      };
+      mockReadFile.mockResolvedValue(JSON.stringify(config));
+
+      const result = await getDeviceId();
+
+      expect(result).toBe('existing-device-id-12345678');
+      // Should not save config since device ID already exists
+      expect(mockWriteFile).not.toHaveBeenCalled();
+    });
+
+    it('generates and saves new device ID when not in config', async () => {
+      mockReadFile.mockRejectedValue(new Error('ENOENT'));
+      mockMkdir.mockResolvedValue(undefined);
+      mockWriteFile.mockResolvedValue(undefined);
+
+      const result = await getDeviceId();
+
+      // Should return a 32-character hex string
+      expect(result).toMatch(/^[a-f0-9]{32}$/);
+      // Should save the new device ID
+      expect(mockWriteFile).toHaveBeenCalled();
+      const savedConfig = JSON.parse(
+        mockWriteFile.mock.calls[0][1] as string
+      ) as AgentageConfig;
+      expect(savedConfig.deviceId).toBe(result);
+    });
+
+    it('returns consistent device ID on subsequent calls', async () => {
+      const config: AgentageConfig = {
+        deviceId: 'consistent-device-id-abc',
+      };
+      mockReadFile.mockResolvedValue(JSON.stringify(config));
+
+      const result1 = await getDeviceId();
+      const result2 = await getDeviceId();
+
+      expect(result1).toBe(result2);
+      expect(result1).toBe('consistent-device-id-abc');
     });
   });
 });

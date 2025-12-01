@@ -1,5 +1,6 @@
+import { createHash } from 'crypto';
 import { mkdir, readFile, rm, writeFile } from 'fs/promises';
-import { homedir } from 'os';
+import { arch, homedir, hostname, platform } from 'os';
 import { dirname, join } from 'path';
 import { AgentageConfig, agentageConfigSchema } from '../types/config.types.js';
 
@@ -140,4 +141,40 @@ export const getAuthStatus = async (): Promise<AuthStatus> => {
   }
 
   return { status: 'authenticated', token: config.auth.token };
+};
+
+/**
+ * Generate a device fingerprint based on machine ID and OS info
+ */
+const generateDeviceFingerprint = async (): Promise<string> => {
+  try {
+    const { machineIdSync } = await import('node-machine-id');
+    const machineId = machineIdSync();
+    const osInfo = `${platform()}-${arch()}-${hostname()}`;
+    const data = `${machineId}|${osInfo}`;
+    return createHash('sha256').update(data).digest('hex').slice(0, 32);
+  } catch {
+    // Fallback if machine ID is not available
+    const osInfo = `${platform()}-${arch()}-${hostname()}-${Date.now()}`;
+    return createHash('sha256').update(osInfo).digest('hex').slice(0, 32);
+  }
+};
+
+/**
+ * Get or create a unique device ID
+ * The device ID is generated from machine ID + OS info and stored in config
+ */
+export const getDeviceId = async (): Promise<string> => {
+  const config = await loadConfig();
+
+  // Return existing device ID if available
+  if (config.deviceId) {
+    return config.deviceId;
+  }
+
+  // Generate and store new device ID
+  const deviceId = await generateDeviceFingerprint();
+  await saveConfig({ ...config, deviceId });
+
+  return deviceId;
 };

@@ -33,6 +33,7 @@ export const registryConfigSchema = z.object({
 export const agentageConfigSchema = z.object({
   auth: authConfigSchema.optional(),
   registry: registryConfigSchema.optional(),
+  deviceId: z.string().optional(),
 });
 
 /**

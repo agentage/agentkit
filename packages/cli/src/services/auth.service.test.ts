@@ -16,6 +16,9 @@ const mockGetRegistryUrl = configUtils.getRegistryUrl as jest.MockedFunction<
 const mockGetAuthToken = configUtils.getAuthToken as jest.MockedFunction<
   typeof configUtils.getAuthToken
 >;
+const mockGetDeviceId = configUtils.getDeviceId as jest.MockedFunction<
+  typeof configUtils.getDeviceId
+>;
 
 // Mock fetch
 const mockFetch = jest.fn();
@@ -25,6 +28,7 @@ describe('auth.service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetRegistryUrl.mockResolvedValue('https://dev.agentage.io');
+    mockGetDeviceId.mockResolvedValue('test-device-id-12345678');
   });
 
   describe('requestDeviceCode', () => {
@@ -50,6 +54,7 @@ describe('auth.service', () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_id: 'test-device-id-12345678' }),
         }
       );
     });

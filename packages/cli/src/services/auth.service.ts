@@ -4,7 +4,7 @@ import {
   TokenResponse,
   User,
 } from '../types/config.types.js';
-import { getAuthToken, getRegistryUrl } from '../utils/config.js';
+import { getAuthToken, getDeviceId, getRegistryUrl } from '../utils/config.js';
 
 /**
  * Auth error class
@@ -21,11 +21,14 @@ export class AuthError extends Error {
  */
 export const requestDeviceCode = async (): Promise<DeviceCodeResponse> => {
   const registryUrl = await getRegistryUrl();
+  const deviceId = await getDeviceId();
+
   const response = await fetch(`${registryUrl}/api/auth/device/code`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ device_id: deviceId }),
   });
 
   if (!response.ok) {

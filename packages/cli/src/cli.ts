@@ -43,10 +43,14 @@ const displayVersionInfo = async (): Promise<void> => {
       const user = await getMe();
       const displayName = user.name || user.email;
       const aliasDisplay = user.verifiedAlias
-        ? chalk.gray(' (@') + chalk.green.bold(user.verifiedAlias) + chalk.gray(')')
+        ? chalk.gray(' (@') +
+          chalk.green.bold(user.verifiedAlias) +
+          chalk.gray(')')
         : '';
       console.log(
-        chalk.gray('  Logged in as: ') + chalk.green.bold(displayName) + aliasDisplay
+        chalk.gray('  Logged in as: ') +
+          chalk.green.bold(displayName) +
+          aliasDisplay
       );
     } else {
       console.log(chalk.gray('  Status: ') + chalk.yellow('Not logged in'));
