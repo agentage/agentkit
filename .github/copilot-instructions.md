@@ -15,6 +15,11 @@
 - Commits: `feat:`, `fix:`, `chore:` (max 72 chars)
 - Verifications: `npm run verify` (type-check + lint + build + test)
 
+## **Publishing**
+
+- The packages are published to npm under the `@agentage` scope.
+- Auto-publish on push to `master` when `package.json` version is bumped.
+
 ## **Release Strategy**
 
 - 🎯 **MINIMAL FIRST**: Interface definitions only, no implementations
@@ -40,6 +45,7 @@
 - ✅ ESM modules (`type: "module"`)
 
 ### Naming
+
 - **Interfaces**: `AgentConfig`, `AgentResponse`, `Tool`
 - **Types**: `AgentFactory`, `CreateToolConfig`
 - **Files**: `agent.types.ts`, `factory.types.ts`, `*.test.ts`
@@ -87,6 +93,7 @@ packages/
 ## **Scripts**
 
 All packages support:
+
 - `npm run build` - Build TypeScript
 - `npm run type-check` - TypeScript validation
 - `npm run lint` - ESLint check
