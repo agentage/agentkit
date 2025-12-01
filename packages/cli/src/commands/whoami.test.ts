@@ -165,4 +165,23 @@ describe('whoamiCommand', () => {
       expect.stringContaining('test@example.com')
     );
   });
+
+  it('displays user with verifiedAlias', async () => {
+    mockLoadConfig.mockResolvedValue({
+      auth: { token: 'test-token' },
+    });
+    mockGetMe.mockResolvedValue({
+      id: '123',
+      email: 'test@example.com',
+      name: 'Test User',
+      verifiedAlias: 'testuser',
+    });
+
+    await whoamiCommand();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '  Alias:',
+      expect.stringContaining('testuser')
+    );
+  });
 });

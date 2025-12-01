@@ -8,6 +8,7 @@ export const userSchema = z.object({
   email: z.string().email(),
   name: z.string().optional(),
   avatar: z.string().url().optional(),
+  verifiedAlias: z.string().optional(),
 });
 
 /**

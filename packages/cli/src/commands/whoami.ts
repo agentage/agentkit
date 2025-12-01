@@ -36,6 +36,9 @@ export const whoamiCommand = async (): Promise<void> => {
       console.log('  Name: ', chalk.bold(user.name));
     }
     console.log('  Email:', chalk.bold(user.email));
+    if (user.verifiedAlias) {
+      console.log('  Alias:', chalk.bold(user.verifiedAlias));
+    }
     console.log('  ID:   ', chalk.gray(user.id));
     console.log();
   } catch (error) {
