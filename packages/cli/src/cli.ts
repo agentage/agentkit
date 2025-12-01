@@ -53,13 +53,31 @@ const displayVersionInfo = async (): Promise<void> => {
           aliasDisplay
       );
     } else {
-      console.log(chalk.gray('  Status: ') + chalk.yellow('Not logged in'));
+      console.log(
+        chalk.gray('  Status: ') +
+          chalk.yellow('Not logged in') +
+          chalk.gray(' (run ') +
+          chalk.cyan('agent login') +
+          chalk.gray(')')
+      );
     }
   } catch (error) {
     if (error instanceof AuthError && error.code === 'session_expired') {
-      console.log(chalk.gray('  Status: ') + chalk.yellow('Session expired'));
+      console.log(
+        chalk.gray('  Status: ') +
+          chalk.yellow('Session expired') +
+          chalk.gray(' (run ') +
+          chalk.cyan('agent login') +
+          chalk.gray(')')
+      );
     } else {
-      console.log(chalk.gray('  Status: ') + chalk.yellow('Not logged in'));
+      console.log(
+        chalk.gray('  Status: ') +
+          chalk.yellow('Not logged in') +
+          chalk.gray(' (run ') +
+          chalk.cyan('agent login') +
+          chalk.gray(')')
+      );
     }
   }
 
