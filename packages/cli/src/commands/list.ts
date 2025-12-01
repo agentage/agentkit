@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { readdir, readFile } from 'fs/promises';
 import { homedir } from 'os';
@@ -153,7 +154,9 @@ export const listCommand = async (): Promise<void> => {
 
     // 3. Display results
     if (allAgents.length === 0) {
-      console.log('No agents found. Run `agent init` to create one.');
+      console.log(
+        'No agents found. Run ' + chalk.cyan('agent init') + ' to create one.'
+      );
       return;
     }
 

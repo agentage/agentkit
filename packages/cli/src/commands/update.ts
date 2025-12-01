@@ -47,10 +47,8 @@ export const updateCommand = async (): Promise<void> => {
 
     await execAsync(`npm install -g ${PACKAGE_NAME}@latest`);
 
-    const currentVersion = await getInstalledVersion();
-
     console.log(
-      chalk.green.bold(`✅ Successfully updated to version ${currentVersion}`)
+      chalk.green.bold(`✅ Successfully updated to version ${latestVersion}`)
     );
   } catch (error) {
     console.error(chalk.red(`❌ Update failed: ${(error as Error).message}`));

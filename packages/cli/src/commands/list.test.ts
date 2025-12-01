@@ -40,7 +40,7 @@ describe('listCommand', () => {
     await listCommand();
 
     expect(consoleLog).toHaveBeenCalledWith(
-      'No agents found. Run `agent init` to create one.'
+      expect.stringContaining('No agents found.')
     );
 
     consoleLog.mockRestore();
@@ -53,7 +53,7 @@ describe('listCommand', () => {
     await listCommand();
 
     expect(consoleLog).toHaveBeenCalledWith(
-      'No agents found. Run `agent init` to create one.'
+      expect.stringContaining('No agents found.')
     );
 
     consoleLog.mockRestore();
@@ -170,7 +170,7 @@ instructions: Test instructions`;
     await listCommand();
 
     expect(consoleLog).toHaveBeenCalledWith(
-      'No agents found. Run `agent init` to create one.'
+      expect.stringContaining('No agents found.')
     );
 
     consoleLog.mockRestore();
