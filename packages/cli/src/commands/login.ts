@@ -65,9 +65,12 @@ export const loginCommand = async (): Promise<void> => {
       deviceCode.expires_in
     );
 
+    // Reload config to get any changes made during auth (e.g., deviceId)
+    const currentConfig = await loadConfig();
+
     // Save token to config
     await saveConfig({
-      ...config,
+      ...currentConfig,
       auth: {
         token: tokenResponse.access_token,
         user: tokenResponse.user,
