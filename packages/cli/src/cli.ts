@@ -215,6 +215,7 @@ program
   .command('init')
   .description('Initialize a new agent')
   .argument('[name]', 'Agent name')
+  .option('-g, --global', 'Initialize in global directory (~/.agentage)')
   .action(initCommand);
 
 program

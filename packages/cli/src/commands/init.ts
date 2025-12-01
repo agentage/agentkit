@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from 'fs/promises';
+import { homedir } from 'os';
 import { join } from 'path';
 
 const sampleAgentTemplate = `---
@@ -17,11 +18,27 @@ export interface AgentConfig {
   paths: string[];
 }
 
-export const initCommand = async (name?: string): Promise<void> => {
+export interface InitOptions {
+  global?: boolean;
+}
+
+/**
+ * Get global agentage directory (~/.agentage)
+ */
+const getGlobalDir = (): string => join(homedir(), '.agentage');
+
+export const initCommand = async (
+  name?: string,
+  options?: InitOptions
+): Promise<void> => {
   const agentName = name || 'my-agent';
-  const agentsDir = 'agents';
+  const isGlobal = options?.global ?? false;
+
+  // Determine base directory
+  const baseDir = isGlobal ? getGlobalDir() : '.';
+  const agentsDir = join(baseDir, 'agents');
   const agentFilePath = join(agentsDir, `${agentName}.agent.md`);
-  const configFilePath = 'agent.json';
+  const configFilePath = join(baseDir, 'agent.json');
 
   const agentContent = sampleAgentTemplate.replace(/{{name}}/g, agentName);
 
@@ -37,7 +54,7 @@ export const initCommand = async (name?: string): Promise<void> => {
     await writeFile(agentFilePath, agentContent, 'utf-8');
     console.log(`✅ Created ${agentFilePath}`);
 
-    // Create agent.json config file in current directory
+    // Create agent.json config file
     await writeFile(
       configFilePath,
       JSON.stringify(agentConfig, null, 2),

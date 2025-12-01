@@ -1,9 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
 import { initCommand } from './init.js';
 
 describe('initCommand', () => {
   const testDir = 'test-init-workspace';
+  const globalDir = join(homedir(), '.agentage');
 
   beforeEach(() => {
     // Create and change to test directory
@@ -83,5 +85,25 @@ describe('initCommand', () => {
     require('fs/promises').writeFile = originalWriteFile;
     mockExit.mockRestore();
     consoleError.mockRestore();
+  });
+
+  test('creates agent in global directory with --global flag', async () => {
+    await initCommand('global-agent', { global: true });
+
+    const globalAgentFilePath = join(globalDir, 'agents', 'global-agent.agent.md');
+    const globalConfigFilePath = join(globalDir, 'agent.json');
+
+    expect(existsSync(join(globalDir, 'agents'))).toBe(true);
+    expect(existsSync(globalAgentFilePath)).toBe(true);
+    expect(existsSync(globalConfigFilePath)).toBe(true);
+
+    const agentContent = readFileSync(globalAgentFilePath, 'utf-8');
+    expect(agentContent).toContain('name: global-agent');
+
+    const configContent = JSON.parse(readFileSync(globalConfigFilePath, 'utf-8'));
+    expect(configContent.paths).toEqual(['agents/']);
+
+    // Cleanup global test files
+    rmSync(globalAgentFilePath);
   });
 });
