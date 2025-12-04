@@ -12,7 +12,7 @@
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "build": "npm run build -w @agentage/core && npm run build -w @agentage/sdk && npm run build -w @agentage/cli && npm run build -w @agentage/model-openai",
+    "build": "npm run build -w @agentage/core && npm run build -w @agentage/sdk && npm run build -w @agentage/model-openai",
     "type-check": "npm run type-check --workspaces",
     "lint": "npm run lint --workspaces",
     "lint:fix": "npm run lint:fix --workspaces",

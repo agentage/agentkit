@@ -24,9 +24,6 @@ Welcome to the AgentKit documentation! This guide will help you build powerful A
 ```bash
 # SDK
 npm install @agentage/sdk
-
-# CLI
-npm install -g @agentage/cli
 ```
 
 ### Quick Start
@@ -143,7 +140,6 @@ AgentKit is organized as a monorepo with multiple packages:
 | Package | Description | npm |
 |---------|-------------|-----|
 | `@agentage/sdk` | Main SDK for building agents | [![npm](https://img.shields.io/npm/v/@agentage/sdk.svg)](https://www.npmjs.com/package/@agentage/sdk) |
-| `@agentage/cli` | CLI for managing agents | [![npm](https://img.shields.io/npm/v/@agentage/cli.svg)](https://www.npmjs.com/package/@agentage/cli) |
 | `@agentage/core` | Core types and interfaces | [![npm](https://img.shields.io/npm/v/@agentage/core.svg)](https://www.npmjs.com/package/@agentage/core) |
 | `@agentage/model-openai` | OpenAI model adapter | [![npm](https://img.shields.io/npm/v/@agentage/model-openai.svg)](https://www.npmjs.com/package/@agentage/model-openai) |
 
