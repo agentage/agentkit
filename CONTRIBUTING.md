@@ -142,7 +142,6 @@ export default class ToolFactory {
 agentkit/                    # Monorepo root
 ├── packages/                # All packages
 │   ├── sdk/                 # @agentage/sdk - Core SDK
-│   ├── cli/                 # @agentage/cli - CLI tool
 │   ├── core/                # @agentage/core - Core types
 │   └── model-openai/        # @agentage/model-openai - OpenAI adapter
 ├── examples/                # Example projects
@@ -156,7 +155,6 @@ agentkit/                    # Monorepo root
 ### Package Dependencies
 
 - **sdk** → depends on **core**
-- **cli** → depends on **core**, **sdk**
 - **model-openai** → depends on **core**
 
 ## Making Changes

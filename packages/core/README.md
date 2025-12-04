@@ -103,7 +103,6 @@ const myProvider: ModelProvider = {
 ## Related Packages
 
 - `@agentage/sdk` - Main SDK implementation
-- `@agentage/cli` - CLI tool for managing agents
 
 ## License
 

@@ -31,19 +31,6 @@ For environment variable support:
 npm install dotenv
 ```
 
-### CLI Installation
-
-Install the AgentKit CLI globally:
-
-```bash
-npm install -g @agentage/cli
-```
-
-Verify installation:
-```bash
-agent --version
-```
-
 ## Your First Agent (SDK)
 
 Let's build a simple AI assistant using the SDK.
@@ -114,57 +101,6 @@ console.log('Agent:', response1.content);
 const response2 = await assistant.send('How is it different from JavaScript?');
 console.log('Agent:', response2.content);
 ```
-
-## Your First Agent (CLI)
-
-The CLI provides a declarative way to define and run agents using YAML files.
-
-### Step 1: Initialize an Agent
-
-```bash
-agent init my-assistant
-```
-
-This creates `agents/my-assistant.yml`:
-
-```yaml
-name: my-assistant
-model: gpt-4
-instructions: |
-  You are a helpful AI assistant.
-  Respond clearly and concisely.
-tools: []
-variables: {}
-```
-
-### Step 2: Customize Your Agent
-
-Edit `agents/my-assistant.yml`:
-
-```yaml
-name: my-assistant
-model: gpt-4
-instructions: |
-  You are a coding assistant specializing in JavaScript and TypeScript.
-  Provide clear, working code examples with explanations.
-  Follow best practices and modern syntax.
-tools: []
-variables: {}
-```
-
-### Step 3: Run Your Agent
-
-```bash
-agent run my-assistant "How do I read a file in Node.js?"
-```
-
-### Step 4: List Your Agents
-
-```bash
-agent list
-```
-
-This shows all agents in your `agents/` directory.
 
 ## Adding Tools to Your Agent
 
