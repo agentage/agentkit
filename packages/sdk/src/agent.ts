@@ -7,7 +7,6 @@ import type {
 } from '@agentage/core';
 import OpenAI from 'openai';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 import {
   MissingApiKeyError,
   NotImplementedError,
@@ -43,12 +42,10 @@ function convertSchemaToJsonSchema(schema: any): any {
   const required: string[] = [];
 
   for (const [key, value] of Object.entries(schema)) {
-    // Check if it's a Zod schema
-    if (value && typeof value === 'object' && '_def' in value) {
+    // Check if it's a Zod schema (has toJSONSchema method from Zod 4.x)
+    if (value && typeof value === 'object' && 'toJSONSchema' in value) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const jsonSchema = zodToJsonSchema(value as any, {
-        $refStrategy: 'none',
-      });
+      const jsonSchema = (value as any).toJSONSchema();
 
       // Extract the actual schema (remove top-level $schema if present)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

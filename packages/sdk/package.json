@@ -41,8 +41,7 @@
   "dependencies": {
     "@agentage/core": "^0.1.0",
     "openai": "^6.15.0",
-    "zod": "4.2.1",
-    "zod-to-json-schema": "3.24.6"
+    "zod": "4.2.1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
