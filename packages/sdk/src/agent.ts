@@ -14,6 +14,7 @@ import {
   ToolNotFoundError,
   UnsupportedModelError,
 } from './errors.js';
+import { getDevPanel } from './devpanel.js';
 
 /**
  * OpenAI tool definition
@@ -99,9 +100,15 @@ class AgentBuilder implements Agent {
   private _instructions?: string;
   private _tools?: Tool<unknown, unknown>[];
   private _config?: Record<string, string>;
+  private _devMode?: boolean;
 
   constructor(name: string) {
     this._name = name;
+  }
+
+  devMode(enabled: boolean = true): Agent {
+    this._devMode = enabled;
+    return this;
   }
 
   model(modelName: string, config?: ModelConfig): Agent {
@@ -131,6 +138,16 @@ class AgentBuilder implements Agent {
   }
 
   async send(message: string): Promise<AgentResponse> {
+    const devPanel = this._devMode ? getDevPanel() : null;
+    
+    if (devPanel?.isEnabled()) {
+      devPanel.log({
+        type: 'config',
+        timestamp: new Date(),
+        data: this.getConfig(),
+      });
+    }
+
     const modelName = this._modelName || 'gpt-4';
 
     // Only support GPT-4 for now
@@ -152,6 +169,14 @@ class AgentBuilder implements Agent {
     }
 
     messages.push({ role: 'user', content: message });
+
+    if (devPanel?.isEnabled()) {
+      devPanel.log({
+        type: 'message',
+        timestamp: new Date(),
+        data: { role: 'user', content: message },
+      });
+    }
 
     // Convert tools to OpenAI format
     const tools = this._tools?.map(convertToOpenAITool);
@@ -181,6 +206,17 @@ class AgentBuilder implements Agent {
         // OpenAI v6 uses union type, we only handle function tool calls
         if (toolCall.type !== 'function') {
           continue;
+        }
+
+        if (devPanel?.isEnabled()) {
+          devPanel.log({
+            type: 'tool_call',
+            timestamp: new Date(),
+            data: {
+              name: toolCall.function.name,
+              arguments: JSON.parse(toolCall.function.arguments),
+            },
+          });
         }
 
         const tool = this._tools?.find(
@@ -215,7 +251,7 @@ class AgentBuilder implements Agent {
       choice = response.choices[0];
     }
 
-    return {
+    const agentResponse = {
       content: choice.message.content || '',
       metadata: {
         id: response.id,
@@ -224,6 +260,16 @@ class AgentBuilder implements Agent {
         finishReason: choice.finish_reason,
       },
     };
+
+    if (devPanel?.isEnabled()) {
+      devPanel.log({
+        type: 'response',
+        timestamp: new Date(),
+        data: agentResponse,
+      });
+    }
+
+    return agentResponse;
   }
 
   async *stream(_message: string): AsyncIterableIterator<AgentResponse> {
