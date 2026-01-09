@@ -20,7 +20,7 @@
     "test:watch": "npm run test:watch --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "clean": "npm run clean --workspaces",
-    "verify": "npm run type-check && npm run lint && npm run build && npm run test"
+    "verify": "npm run build && npm run type-check && npm run lint && npm run test"
   },
   "keywords": [
     "agent",
