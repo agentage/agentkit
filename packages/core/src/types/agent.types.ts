@@ -32,6 +32,7 @@ export interface Agent {
     toolList: Tool<TParams, TResult>[]
   ): Agent;
   config(configEntries: ConfigEntry[]): Agent;
+  devMode?(enabled?: boolean): Agent;
   send(message: string): Promise<AgentResponse>;
   stream(message: string): AsyncIterableIterator<AgentResponse>;
 }

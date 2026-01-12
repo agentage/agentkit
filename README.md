@@ -45,6 +45,7 @@ npm install @agentage/sdk
 - **Type-safe tools** - Zod-based schema validation
 - **Multiple models** - Support for OpenAI, Anthropic, and custom adapters
 - **Zero configuration** - Start building agents immediately
+- **Developer Debug Panel** - Built-in debugging tools for inspecting agent execution
 
 ## Quick Start
 
@@ -198,6 +199,37 @@ const analyst = agent('analyst')
   })
   .instructions('Provide precise, factual analysis');
 ```
+
+### 6. Developer Debug Panel
+
+Debug and inspect agent execution in real-time:
+
+```typescript
+import { agent, initDevPanel, showDevPanel } from '@agentage/sdk';
+
+// Initialize dev panel (auto-enabled in NODE_ENV=development)
+initDevPanel({ enabled: true, logLevel: 'verbose' });
+
+// Enable dev mode on agent
+const debugAgent = agent('debug-bot')
+  .model('gpt-4')
+  .instructions('You are helpful')
+  .devMode(true); // Enable debug logging
+
+await debugAgent.send('Hello!');
+
+// Show visual dev panel with all events
+showDevPanel();
+```
+
+The dev panel logs:
+- 🔧 Agent configuration
+- 💬 Messages sent/received
+- 🔨 Tool calls
+- ✅ Model responses
+- ❌ Errors
+
+See [Dev Panel Documentation](./docs/dev-panel.md) for complete guide.
 
 ## Philosophy
 
