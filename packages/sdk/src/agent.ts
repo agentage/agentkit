@@ -6,6 +6,7 @@ import type {
   Tool,
 } from '@agentage/core';
 import OpenAI from 'openai';
+import { toJSONSchema } from 'zod';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import {
   MissingApiKeyError,
@@ -42,19 +43,20 @@ function convertSchemaToJsonSchema(schema: any): any {
   const required: string[] = [];
 
   for (const [key, value] of Object.entries(schema)) {
-    // Check if it's a Zod schema (has toJSONSchema method from Zod 4.x)
-    if (value && typeof value === 'object' && 'toJSONSchema' in value) {
+    // Check if it's a Zod schema (has _zod property in Zod 4.x)
+    if (value && typeof value === 'object' && ('_zod' in value || '_def' in value)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const jsonSchema = (value as any).toJSONSchema();
+      const jsonSchema = toJSONSchema(value as any);
 
       // Extract the actual schema (remove top-level $schema if present)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { $schema, ...cleanSchema } = jsonSchema as Record<string, unknown>;
       properties[key] = cleanSchema;
 
-      // Check if the field is optional
-      const def = (value as { _def?: { typeName?: string } })._def;
-      if (def?.typeName !== 'ZodOptional') {
+      // Check if the field is optional (Zod 4.x uses _zod.def.type)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const zodDef = (value as any)._zod?.def;
+      if (zodDef?.type !== 'optional') {
         required.push(key);
       }
     } else {
