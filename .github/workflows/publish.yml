@@ -112,14 +112,10 @@ jobs:
           fi
 
   verify:
-    name: ✅ Verify ${{ matrix.package.name }}@${{ matrix.package.version }}
+    name: ✅ Verify All Packages
     needs: [detect-changes]
     if: needs.detect-changes.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
-      fail-fast: true
 
     steps:
       - name: 📥 Checkout code
@@ -134,18 +130,11 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🏗️ Build all workspace packages
-        run: npm run build
-
-      - name: ✅ Run verification
-        working-directory: ${{ matrix.package.dir }}
-        run: |
-          echo "🔍 Verifying ${{ matrix.package.name }}@${{ matrix.package.version }}"
-          npm run verify
+      - name: ✅ Run full verification
+        run: npm run verify
 
       - name: ✅ Verification passed
-        run: |
-          echo "✅ ${{ matrix.package.name }}@${{ matrix.package.version }} verified successfully" >> $GITHUB_STEP_SUMMARY
+        run: echo "✅ All packages verified successfully" >> $GITHUB_STEP_SUMMARY
 
   publish:
     name: 📤 Publish ${{ matrix.package.name }}@${{ matrix.package.version }}
