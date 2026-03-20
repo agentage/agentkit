@@ -8,19 +8,21 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "build": "npm run build -w @agentage/core && npm run build -w @agentage/sdk && npm run build -w @agentage/model-openai",
-    "type-check": "npm run type-check --workspaces",
-    "lint": "npm run lint --workspaces",
-    "lint:fix": "npm run lint:fix --workspaces",
-    "test": "npm run test --workspaces",
-    "test:watch": "npm run test:watch --workspaces",
-    "test:coverage": "npm run test:coverage --workspaces",
-    "clean": "npm run clean --workspaces",
-    "verify": "npm run build && npm run type-check && npm run lint && npm run test"
+    "build": "npm run build -w @agentage/core && npm run build -w @agentage/platform",
+    "type-check": "tsc -b",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+    "format:check": "npm run format:check --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "clean": "npm run clean --workspaces --if-present",
+    "verify": "npm run type-check && npm run lint && npm run format:check && npm run test && npm run build"
   },
   "keywords": [
     "agent",
@@ -43,14 +45,15 @@
   },
   "homepage": "https://github.com/agentage/agentkit#readme",
   "devDependencies": {
-    "@types/jest": "30.0.0",
-    "@types/node": "25.5.0",
-    "@typescript-eslint/eslint-plugin": "8.57.0",
-    "@typescript-eslint/parser": "8.57.0",
-    "eslint": "9.39.4",
-    "jest": "30.3.0",
-    "ts-jest": "29.4.6",
-    "tsx": "4.21.0",
-    "typescript": "5.9.3"
+    "@types/node": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
+    "@vitest/coverage-v8": "latest",
+    "eslint": "latest",
+    "eslint-config-prettier": "latest",
+    "eslint-plugin-prettier": "latest",
+    "prettier": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
   }
 }

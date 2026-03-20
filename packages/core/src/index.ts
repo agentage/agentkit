@@ -1,10 +1,17 @@
-export * from './constants.js';
-export * from './types/agent.types.js';
-export * from './types/config.types.js';
-export * from './types/message.types.js';
-export * from './types/model.types.js';
-export * from './types/modelprovider.types.js';
-export * from './types/result.types.js';
-export * from './types/tool.types.js';
+export type {
+  JsonSchema,
+  AgentManifest,
+  AgentProcess,
+  Agent,
+  AgentFactory,
+  RunState,
+  RunInput,
+  Run,
+  RunEventType,
+  RunEventData,
+  RunEvent,
+} from './types.js';
 
-export const version = '0.0.1';
+export { TERMINAL_STATES, STATE_TRANSITIONS, OUTPUT_FORMATS } from './constants.js';
+export { isTerminal, canTransition } from './state-machine.js';
+export { createAgent } from './create-agent.js';

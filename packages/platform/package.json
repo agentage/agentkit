@@ -1,7 +1,7 @@
 {
-  "name": "@agentage/core",
+  "name": "@agentage/platform",
   "version": "0.2.0",
-  "description": "Agent interface and run model for the Agentage platform",
+  "description": "Daemon/hub protocol types for the Agentage platform",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,6 +16,10 @@
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
+  "peerDependencies": {
+    "@agentage/core": "^0.2.0"
+  },
+  "devDependencies": {},
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit",
@@ -31,20 +35,21 @@
     "prepublishOnly": "npm run verify"
   },
   "keywords": [
-    "agentkit",
-    "core",
-    "types",
-    "typescript"
+    "agentage",
+    "platform",
+    "daemon",
+    "hub",
+    "protocol"
   ],
   "author": "Agentage",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/agentage/agentkit.git",
-    "directory": "packages/core"
+    "directory": "packages/platform"
   },
   "bugs": {
     "url": "https://github.com/agentage/agentkit/issues"
   },
-  "homepage": "https://github.com/agentage/agentkit/tree/master/packages/core#readme"
+  "homepage": "https://github.com/agentage/agentkit/tree/master/packages/platform#readme"
 }
