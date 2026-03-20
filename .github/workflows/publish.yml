@@ -182,7 +182,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "📤 Publishing ${{ matrix.package.name }}@${{ matrix.package.version }}"
-          npm publish --access public --provenance
+          npm publish --access public
 
       - name: 🏷️ Create git tag
         run: |
