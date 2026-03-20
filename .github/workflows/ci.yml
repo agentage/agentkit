@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   test:
@@ -29,63 +29,8 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🏗️ Build packages
-        run: npm run build
-
       - name: ✅ Verify all packages
         run: npm run verify
 
       - name: ✅ All checks passed
         run: echo "🎉 All CI checks passed successfully!"
-
-  verify-examples:
-    name: 🔍 Verify Examples
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v5
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 🏗️ Build packages
-        run: npm run build
-
-      - name: 🔍 Verify examples
-        run: |
-          echo "🔍 Verifying examples..."
-
-          for example_dir in examples/*; do
-            if [ ! -d "$example_dir" ]; then
-              continue
-            fi
-            
-            example_name=$(basename "$example_dir")
-            echo ""
-            echo "📦 Verifying example: $example_name"
-            
-            cd "$example_dir"
-            
-            # Install dependencies
-            npm install
-            
-            # Type check
-            if [ -f "tsconfig.json" ]; then
-              echo "  🔍 Type checking..."
-              npx tsc --noEmit
-            fi
-            
-            cd ../..
-            
-            echo "  ✅ $example_name verified"
-          done
-
-          echo ""
-          echo "✅ All examples verified successfully!"

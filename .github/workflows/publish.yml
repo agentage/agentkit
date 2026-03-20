@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 jobs:
   detect-changes:
@@ -42,20 +42,20 @@ jobs:
           get_package_info() {
             local pkg_dir=$1
             local pkg_json="${pkg_dir}/package.json"
-            
+
             if [ ! -f "$pkg_json" ]; then
               return
             fi
-            
+
             local name=$(node -p "require('./${pkg_json}').name")
             local version=$(node -p "require('./${pkg_json}').version")
             local private=$(node -p "require('./${pkg_json}').private || false")
-            
+
             # Skip private packages
             if [ "$private" = "true" ]; then
               return
             fi
-            
+
             echo "${pkg_dir}|${name}|${version}"
           }
 
@@ -63,7 +63,7 @@ jobs:
           version_exists_on_npm() {
             local name=$1
             local version=$2
-            
+
             # Try to get the specific version from npm
             if npm view "${name}@${version}" version 2>/dev/null; then
               return 0  # Version exists
@@ -74,21 +74,21 @@ jobs:
 
           changed_packages=()
 
-          # Check all packages
-          for pkg_dir in packages/*; do
+          # Check packages in dependency order (core first, then platform)
+          for pkg_dir in packages/core packages/platform; do
             if [ ! -d "$pkg_dir" ]; then
               continue
             fi
-            
+
             pkg_info=$(get_package_info "$pkg_dir")
             if [ -z "$pkg_info" ]; then
               continue
             fi
-            
+
             IFS='|' read -r dir name version <<< "$pkg_info"
-            
+
             echo "📦 Checking ${name}@${version}..."
-            
+
             # Check if this version exists on npm
             if version_exists_on_npm "$name" "$version"; then
               echo "⏭️  Version ${version} already published for ${name}"
@@ -155,7 +155,8 @@ jobs:
     strategy:
       matrix:
         package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
-      fail-fast: false
+      max-parallel: 1
+      fail-fast: true
 
     steps:
       - name: 📥 Checkout code

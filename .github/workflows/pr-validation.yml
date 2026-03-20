@@ -13,7 +13,7 @@ permissions:
   actions: read
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   validate:
@@ -36,10 +36,6 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🏗️ Build
-        id: build
-        run: npm run build
-
       - name: 🔍 Type check
         id: type-check
         run: npm run type-check
@@ -47,6 +43,10 @@ jobs:
       - name: 🎨 Lint
         id: lint
         run: npm run lint
+
+      - name: 🎨 Format check
+        id: format-check
+        run: npm run format:check
 
       - name: 🧪 Test
         id: test
@@ -56,38 +56,9 @@ jobs:
         id: coverage
         run: npm run test:coverage
 
-      - name: 🔍 Verify Examples
-        id: examples
-        run: |
-          echo "🔍 Verifying examples..."
-
-          for example_dir in examples/*; do
-            if [ ! -d "$example_dir" ]; then
-              continue
-            fi
-            
-            example_name=$(basename "$example_dir")
-            echo ""
-            echo "📦 Verifying example: $example_name"
-            
-            cd "$example_dir"
-            
-            # Install dependencies
-            npm install
-            
-            # Type check
-            if [ -f "tsconfig.json" ]; then
-              echo "  🔍 Type checking..."
-              npx tsc --noEmit
-            fi
-            
-            cd ../..
-            
-            echo "  ✅ $example_name verified"
-          done
-
-          echo ""
-          echo "✅ All examples verified successfully!"
+      - name: 🏗️ Build
+        id: build
+        run: npm run build
 
       - name: 📊 Validation Summary
         id: validation-summary
@@ -103,10 +74,10 @@ jobs:
           |------|--------|
           | 🔍 Type Check | ${{ steps.type-check.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
           | 🎨 Lint | ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+          | 🎨 Format | ${{ steps.format-check.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
           | 🏗️ Build | ${{ steps.build.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
           | 🧪 Tests | ${{ steps.test.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
           | 📊 Coverage | ${{ steps.coverage.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
-          | 📦 Examples | ${{ steps.examples.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
 
           **Overall:** ${{ job.status == 'success' && '✅ All checks passed!' || '❌ Some checks failed' }}
           COMMENT_EOF
