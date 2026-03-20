@@ -16,26 +16,26 @@ env:
 
 jobs:
   detect-changes:
-    name: Detect Version Changes
+    name: 🔍 Detect Version Changes
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.detect.outputs.packages }}
       has-changes: ${{ steps.detect.outputs.has-changes }}
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Detect changed package versions
+      - name: 🔍 Detect changed package versions
         id: detect
         run: |
           # Function to get package info
@@ -87,13 +87,13 @@ jobs:
 
             IFS='|' read -r dir name version <<< "$pkg_info"
 
-            echo "Checking ${name}@${version}..."
+            echo "📦 Checking ${name}@${version}..."
 
             # Check if this version exists on npm
             if version_exists_on_npm "$name" "$version"; then
-              echo "Version ${version} already published for ${name}"
+              echo "⏭️  Version ${version} already published for ${name}"
             else
-              echo "New version detected: ${name}@${version}"
+              echo "✨ New version detected: ${name}@${version}"
               changed_packages+=("{\"name\":\"${name}\",\"version\":\"${version}\",\"dir\":\"${dir}\"}")
             fi
           done
@@ -102,17 +102,17 @@ jobs:
           if [ ${#changed_packages[@]} -eq 0 ]; then
             echo "has-changes=false" >> $GITHUB_OUTPUT
             echo "packages=[]" >> $GITHUB_OUTPUT
-            echo "No version changes detected"
+            echo "ℹ️  No version changes detected"
           else
             echo "has-changes=true" >> $GITHUB_OUTPUT
             packages_json=$(printf '%s\n' "${changed_packages[@]}" | jq -s -c '.')
             echo "packages=${packages_json}" >> $GITHUB_OUTPUT
-            echo "Packages to publish:"
+            echo "🎯 Packages to publish:"
             echo "${packages_json}" | jq '.'
           fi
 
   verify:
-    name: Verify ${{ matrix.package.name }}@${{ matrix.package.version }}
+    name: ✅ Verify ${{ matrix.package.name }}@${{ matrix.package.version }}
     needs: [detect-changes]
     if: needs.detect-changes.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
@@ -122,33 +122,33 @@ jobs:
       fail-fast: true
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Build all workspace packages
+      - name: 🏗️ Build all workspace packages
         run: npm run build
 
-      - name: Run verification
+      - name: ✅ Run verification
         working-directory: ${{ matrix.package.dir }}
         run: |
-          echo "Verifying ${{ matrix.package.name }}@${{ matrix.package.version }}"
+          echo "🔍 Verifying ${{ matrix.package.name }}@${{ matrix.package.version }}"
           npm run verify
 
-      - name: Verification passed
+      - name: ✅ Verification passed
         run: |
-          echo "${{ matrix.package.name }}@${{ matrix.package.version }} verified successfully" >> $GITHUB_STEP_SUMMARY
+          echo "✅ ${{ matrix.package.name }}@${{ matrix.package.version }} verified successfully" >> $GITHUB_STEP_SUMMARY
 
   publish:
-    name: Publish ${{ matrix.package.name }}@${{ matrix.package.version }}
+    name: 📤 Publish ${{ matrix.package.name }}@${{ matrix.package.version }}
     needs: [detect-changes, verify]
     if: needs.detect-changes.outputs.has-changes == 'true' && needs.verify.result == 'success'
     runs-on: ubuntu-latest
@@ -159,31 +159,31 @@ jobs:
       fail-fast: true
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Build all workspace packages
+      - name: 🏗️ Build all workspace packages
         run: npm run build
 
-      - name: Publish to npm
+      - name: 📤 Publish to npm
         working-directory: ${{ matrix.package.dir }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "Publishing ${{ matrix.package.name }}@${{ matrix.package.version }}"
+          echo "📤 Publishing ${{ matrix.package.name }}@${{ matrix.package.version }}"
           npm publish --access public --provenance
 
-      - name: Create git tag
+      - name: 🏷️ Create git tag
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -195,33 +195,33 @@ jobs:
           git tag -a "${TAG_NAME}" -m "Release ${{ matrix.package.name }}@${{ matrix.package.version }}"
           git push origin "${TAG_NAME}"
 
-      - name: Published successfully
+      - name: ✅ Published successfully
         run: |
-          echo "Successfully published ${{ matrix.package.name }}@${{ matrix.package.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "Package URL: https://www.npmjs.com/package/${{ matrix.package.name }}/v/${{ matrix.package.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 Successfully published ${{ matrix.package.name }}@${{ matrix.package.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "📦 Package URL: https://www.npmjs.com/package/${{ matrix.package.name }}/v/${{ matrix.package.version }}" >> $GITHUB_STEP_SUMMARY
 
   summary:
-    name: Publish Summary
+    name: 📋 Publish Summary
     needs: [detect-changes, verify, publish]
     if: always() && needs.detect-changes.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Create summary
+      - name: 📊 Create summary
         run: |
-          echo "## Package Publishing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Package Publishing Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ needs.verify.result }}" != "success" ]; then
-            echo "**Verification failed - packages not published**" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Verification failed - packages not published**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "Please fix verification errors and try again." >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.publish.result }}" == "success" ]; then
-            echo "**All packages published successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All packages published successfully!**" >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.publish.result }}" == "skipped" ]; then
-            echo "**Publishing skipped - verification failed**" >> $GITHUB_STEP_SUMMARY
+            echo "⏭️ **Publishing skipped - verification failed**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "**Some packages failed to publish**" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ **Some packages failed to publish**" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -231,9 +231,9 @@ jobs:
           packages='${{ needs.detect-changes.outputs.packages }}'
 
           if [ "${{ needs.verify.result }}" == "success" ] && [ "${{ needs.publish.result }}" == "success" ]; then
-            echo "$packages" | jq -r '.[] | "- **\(.name)** version \(.version) - Published"' >> $GITHUB_STEP_SUMMARY
+            echo "$packages" | jq -r '.[] | "- ✅ **\(.name)** version \(.version) - Published"' >> $GITHUB_STEP_SUMMARY
           elif [ "${{ needs.verify.result }}" != "success" ]; then
-            echo "$packages" | jq -r '.[] | "- **\(.name)** version \(.version) - Verification failed"' >> $GITHUB_STEP_SUMMARY
+            echo "$packages" | jq -r '.[] | "- ❌ **\(.name)** version \(.version) - Verification failed"' >> $GITHUB_STEP_SUMMARY
           else
-            echo "$packages" | jq -r '.[] | "- **\(.name)** version \(.version) - Skipped"' >> $GITHUB_STEP_SUMMARY
+            echo "$packages" | jq -r '.[] | "- ⏭️ **\(.name)** version \(.version) - Skipped"' >> $GITHUB_STEP_SUMMARY
           fi
