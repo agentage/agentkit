@@ -130,10 +130,22 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: ✅ Run full verification
-        run: npm run verify
+      - name: 🔍 Type check
+        run: npm run type-check
 
-      - name: ✅ Verification passed
+      - name: 🎨 Lint
+        run: npm run lint
+
+      - name: 🎨 Format check
+        run: npm run format:check
+
+      - name: 🧪 Test
+        run: npm run test
+
+      - name: 🏗️ Build
+        run: npm run build
+
+      - name: ✅ All checks passed
         run: echo "✅ All packages verified successfully" >> $GITHUB_STEP_SUMMARY
 
   publish:
