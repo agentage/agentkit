@@ -6,6 +6,7 @@ export type {
   AgentFactory,
   RunState,
   RunInput,
+  RunOptions,
   Run,
   RunEventType,
   RunEventData,

@@ -8,7 +8,7 @@ describe('createAgent end-to-end', () => {
       name: 'echo-agent',
       description: 'Echoes input',
       path: '/tmp/echo',
-      async *run(input) {
+      async *run(input, _options) {
         yield {
           type: 'output',
           data: { type: 'output', content: `Echo: ${input.task}`, format: 'text' },
