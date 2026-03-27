@@ -1,28 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { createAgent } from './create-agent.js';
+import { agent, output, result } from './index.js';
 import type { RunEvent } from './types.js';
 
-describe('createAgent end-to-end', () => {
+describe('agent end-to-end', () => {
   it('creates agent, runs it, collects events', async () => {
-    const agent = createAgent({
+    const a = agent({
       name: 'echo-agent',
       description: 'Echoes input',
-      path: '/tmp/echo',
-      async *run(input, _options) {
-        yield {
-          type: 'output',
-          data: { type: 'output', content: `Echo: ${input.task}`, format: 'text' },
-          timestamp: Date.now(),
-        };
-        yield {
-          type: 'result',
-          data: { type: 'result', success: true, output: 'done' },
-          timestamp: Date.now(),
-        };
+      async *run(input) {
+        yield output(`Echo: ${input.task}`);
+        yield result(true, 'done');
       },
     });
 
-    const process = await agent.run({ task: 'hello' });
+    const process = await a.run({ task: 'hello' });
     expect(typeof process.runId).toBe('string');
 
     const events: RunEvent[] = [];
@@ -34,21 +25,19 @@ describe('createAgent end-to-end', () => {
 
     const outputEvents = events.filter((e) => e.type === 'output');
     expect(outputEvents.length).toBeGreaterThanOrEqual(1);
-    const outputData = outputEvents[0].data;
-    expect(outputData.type).toBe('output');
-    if (outputData.type === 'output') {
-      expect(outputData.format).toBe('text');
-    }
+    expect(outputEvents[0]!.data).toEqual({
+      type: 'output',
+      content: 'Echo: hello',
+      format: 'text',
+    });
 
     const resultEvents = events.filter((e) => e.type === 'result');
     expect(resultEvents).toHaveLength(1);
-    const resultEvent = resultEvents[0];
-    expect(resultEvent.data).toEqual({ type: 'result', success: true, output: 'done' });
-    expect(resultEvent).toBe(events[events.length - 1]);
+    expect(resultEvents[0]!.data).toEqual({ type: 'result', success: true, output: 'done' });
+    expect(resultEvents[0]).toBe(events[events.length - 1]);
 
     for (const event of events) {
       expect(event.timestamp).toBeGreaterThan(0);
-      expect(typeof event.timestamp).toBe('number');
     }
   });
 });
