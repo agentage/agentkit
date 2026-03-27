@@ -81,6 +81,12 @@ export type RunState =
   | 'failed'
   | 'canceled';
 
+/** Options passed to agent run functions by createAgent */
+export interface RunOptions {
+  /** AbortSignal for cancellation — wired from AgentProcess.cancel() */
+  signal: AbortSignal;
+}
+
 /** Input to an agent run */
 export interface RunInput {
   /** The task/prompt — what the agent should do */

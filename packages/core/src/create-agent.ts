@@ -1,4 +1,4 @@
-import type { Agent, AgentProcess, JsonSchema, RunEvent, RunInput } from './types.js';
+import type { Agent, AgentProcess, JsonSchema, RunEvent, RunInput, RunOptions } from './types.js';
 
 interface CreateAgentConfig {
   name: string;
@@ -8,7 +8,7 @@ interface CreateAgentConfig {
   inputSchema?: JsonSchema;
   path: string;
   config?: Record<string, unknown>;
-  run: (input: RunInput) => AsyncIterable<RunEvent>;
+  run: (input: RunInput, options: RunOptions) => AsyncIterable<RunEvent>;
 }
 
 /** Convenience function that constructs an Agent object */
@@ -24,12 +24,15 @@ export const createAgent = (agentConfig: CreateAgentConfig): Agent => ({
   },
   async run(input: RunInput): Promise<AgentProcess> {
     const runId = crypto.randomUUID();
-    const events = agentConfig.run(input);
+    const controller = new AbortController();
+    const events = agentConfig.run(input, { signal: controller.signal });
 
     return {
       runId,
       events,
-      cancel() {},
+      cancel() {
+        controller.abort();
+      },
       sendInput() {},
     };
   },

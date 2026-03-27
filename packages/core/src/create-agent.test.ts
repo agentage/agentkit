@@ -10,7 +10,7 @@ describe('createAgent', () => {
       version: '1.0.0',
       tags: ['test'],
       path: '/tmp/test-agent',
-      async *run(input) {
+      async *run(input, _options) {
         yield {
           type: 'output',
           data: { type: 'output', content: `Hello: ${input.task}`, format: 'text' },
@@ -122,5 +122,73 @@ describe('createAgent', () => {
       expect(event.timestamp).toBeGreaterThanOrEqual(before);
       expect(event.timestamp).toBeLessThanOrEqual(after);
     }
+  });
+
+  it('passes AbortSignal to run function', async () => {
+    let receivedSignal: AbortSignal | undefined;
+    const agent = createAgent({
+      name: 'signal-test',
+      path: '/test',
+      async *run(_input, options) {
+        receivedSignal = options.signal;
+        yield { type: 'result', data: { type: 'result', success: true }, timestamp: Date.now() };
+      },
+    });
+
+    const process = await agent.run({ task: 'test' });
+    const events: unknown[] = [];
+    for await (const event of process.events) {
+      events.push(event);
+    }
+    expect(receivedSignal).toBeInstanceOf(AbortSignal);
+    expect(receivedSignal!.aborted).toBe(false);
+  });
+
+  it('cancel() aborts the signal', async () => {
+    let receivedSignal: AbortSignal | undefined;
+    const agent = createAgent({
+      name: 'cancel-test',
+      path: '/test',
+      async *run(_input, options) {
+        receivedSignal = options.signal;
+        yield {
+          type: 'output',
+          data: { type: 'output', content: 'waiting', format: 'text' },
+          timestamp: Date.now(),
+        };
+        // Don't yield result — simulates long-running agent
+      },
+    });
+
+    const process = await agent.run({ task: 'test' });
+    expect(receivedSignal).toBeUndefined(); // not called yet
+
+    // Start consuming but don't await completion
+    const events: unknown[] = [];
+    const iterator = process.events[Symbol.asyncIterator]();
+    const first = await iterator.next();
+    events.push(first.value);
+
+    expect(receivedSignal).toBeInstanceOf(AbortSignal);
+    expect(receivedSignal!.aborted).toBe(false);
+
+    process.cancel();
+    expect(receivedSignal!.aborted).toBe(true);
+  });
+
+  it('multiple cancel() calls are safe', async () => {
+    const agent = createAgent({
+      name: 'multi-cancel',
+      path: '/test',
+      async *run(_input, _options) {
+        yield { type: 'result', data: { type: 'result', success: true }, timestamp: Date.now() };
+      },
+    });
+
+    const process = await agent.run({ task: 'test' });
+    process.cancel();
+    process.cancel();
+    process.cancel();
+    // Should not throw
   });
 });
