@@ -68,10 +68,10 @@ export type AgentFactory = (path: string) => Promise<Agent | null>;
 /**
  * Run states:
  *
- *   submitted → working → completed
- *                       → failed
- *                       → canceled
- *               working ↔ input_required
+ *   submitted -> working -> completed
+ *                        -> failed
+ *                        -> canceled
+ *              working <-> input_required
  */
 export type RunState =
   | 'submitted'
@@ -81,10 +81,13 @@ export type RunState =
   | 'failed'
   | 'canceled';
 
-/** Options passed to agent run functions by createAgent */
-export interface RunOptions {
+/** Context passed to agent run functions */
+export interface RunContext {
   /** AbortSignal for cancellation — wired from AgentProcess.cancel() */
   signal: AbortSignal;
+
+  /** Abort-aware delay — resolves early (without throwing) if cancelled */
+  sleep: (ms: number) => Promise<void>;
 }
 
 /** Input to an agent run */
@@ -153,4 +156,56 @@ export interface RunEvent {
   type: RunEventType;
   data: RunEventData;
   timestamp: number;
+}
+
+// ─── Agent API v2 types ─────────────────────────────────────
+
+/** Configuration for the agent() builder */
+export interface AgentConfig {
+  /** Agent name (inferred from filename if omitted) */
+  name?: string;
+  /** Human-readable description */
+  description?: string;
+  /** Semver version */
+  version?: string;
+  /** Tags for filtering/search */
+  tags?: string[];
+  /** JSON Schema for structured input */
+  inputSchema?: JsonSchema;
+
+  // Declarative LLM mode (no run function needed)
+  /** LLM model ID */
+  model?: string;
+  /** System prompt */
+  prompt?: string;
+  /** Built-in tool names or Tool objects */
+  tools?: (string | Tool)[];
+  /** MCP server configs */
+  mcp?: McpServer[];
+  /** LLM temperature */
+  temperature?: number;
+  /** Max LLM turns */
+  maxTurns?: number;
+
+  /** Custom run function — overrides declarative mode */
+  run?: (input: RunInput, ctx: RunContext) => AsyncIterable<RunEvent>;
+}
+
+/** Custom tool definition */
+export interface Tool {
+  name: string;
+  description: string;
+  input: unknown;
+  execute(args: unknown): Promise<unknown> | unknown;
+}
+
+/** MCP server configuration */
+export interface McpServer {
+  name: string;
+  type?: 'stdio' | 'http' | 'sse';
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  url?: string;
+  headers?: Record<string, string>;
 }
