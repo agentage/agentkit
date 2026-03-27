@@ -1,6 +1,6 @@
 {
   "name": "@agentage/platform",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Daemon/hub protocol types for the Agentage platform",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,7 +17,7 @@
     "npm": ">=10.0.0"
   },
   "peerDependencies": {
-    "@agentage/core": "^0.2.0"
+    "@agentage/core": ">=0.2.0"
   },
   "devDependencies": {},
   "scripts": {
