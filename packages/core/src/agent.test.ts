@@ -119,7 +119,7 @@ describe('agent', () => {
     expect(results[0]!.data).toEqual({ type: 'result', success: true, output: 'explicit' });
   });
 
-  it('declarative agent (no run) auto-emits result(true)', async () => {
+  it('declarative agent (no run) calls claude adapter', async () => {
     const a = agent({
       model: 'claude-sonnet-4-6',
       prompt: 'You are a reviewer',
@@ -127,9 +127,12 @@ describe('agent', () => {
     const process = await a.run({ task: 'review this' });
     const events = await collect(process.events);
 
-    expect(events).toHaveLength(1);
-    expect(events[0]!.type).toBe('result');
-    expect(events[0]!.data).toEqual({ type: 'result', success: true, output: undefined });
+    // Without the Claude SDK installed, the adapter yields an error + result(false)
+    const errors = events.filter((e) => e.type === 'error');
+    const results = events.filter((e) => e.type === 'result');
+    expect(errors.length).toBeGreaterThanOrEqual(1);
+    expect(results).toHaveLength(1);
+    expect((results[0]!.data as { success: boolean }).success).toBe(false);
   });
 
   it('cancel() aborts the signal', async () => {
