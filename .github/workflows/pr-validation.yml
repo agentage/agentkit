@@ -1,16 +1,17 @@
-name: Pull Request Validation
+name: PR Validation
 
 on:
   pull_request:
     branches: [master]
     types: [opened, synchronize, reopened]
 
-  workflow_dispatch:
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
   pull-requests: write
-  actions: read
 
 env:
   NODE_VERSION: '22'
@@ -19,9 +20,7 @@ jobs:
   validate:
     name: 🔍 Validate Pull Request
     runs-on: ubuntu-latest
-    outputs:
-      validation-result: ${{ steps.validation-summary.outputs.result }}
-      pr-comment-body: ${{ steps.validation-summary.outputs.comment-body }}
+    timeout-minutes: 10
 
     steps:
       - name: 📥 Checkout code
@@ -34,94 +33,94 @@ jobs:
           cache: 'npm'
 
       - name: 📦 Install dependencies
+        id: install
         run: npm ci
 
       - name: 🔍 Type check
         id: type-check
+        if: always() && steps.install.outcome == 'success'
         run: npm run type-check
 
       - name: 🎨 Lint
         id: lint
+        if: always() && steps.install.outcome == 'success'
         run: npm run lint
 
       - name: 🎨 Format check
-        id: format-check
+        id: format
+        if: always() && steps.install.outcome == 'success'
         run: npm run format:check
 
-      - name: 🧪 Test
+      - name: 🧪 Tests + coverage
         id: test
-        run: npm run test
-
-      - name: 📊 Test Coverage
-        id: coverage
+        if: always() && steps.install.outcome == 'success'
         run: npm run test:coverage
 
       - name: 🏗️ Build
         id: build
+        if: always() && steps.install.outcome == 'success'
         run: npm run build
 
-      - name: 📊 Validation Summary
-        id: validation-summary
+      - name: 💬 Comment on PR
         if: always()
-        run: |
-          echo "result=${{ job.status }}" >> $GITHUB_OUTPUT
-
-          cat << 'EOF' >> $GITHUB_OUTPUT
-          comment-body<<COMMENT_EOF
-          ## 🔍 Pull Request Validation Results
-
-          | Step | Status |
-          |------|--------|
-          | 🔍 Type Check | ${{ steps.type-check.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
-          | 🎨 Lint | ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
-          | 🎨 Format | ${{ steps.format-check.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
-          | 🏗️ Build | ${{ steps.build.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
-          | 🧪 Tests | ${{ steps.test.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
-          | 📊 Coverage | ${{ steps.coverage.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
-
-          **Overall:** ${{ job.status == 'success' && '✅ All checks passed!' || '❌ Some checks failed' }}
-          COMMENT_EOF
-          EOF
-
-  post-comment:
-    name: 💬 Post PR Comment
-    needs: [validate]
-    if: always() && github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📊 Post PR comment
         uses: actions/github-script@v8
         with:
           script: |
-            const validationBody = `${{ needs.validate.outputs.pr-comment-body }}`;
-            const timestamp = new Date().toISOString();
+            const marker = '<!-- pr-validation-bot -->';
+            const checks = [
+              { name: 'Dependencies installed', outcome: '${{ steps.install.outcome }}' },
+              { name: 'Type check passed', outcome: '${{ steps.type-check.outcome }}' },
+              { name: 'Linting passed', outcome: '${{ steps.lint.outcome }}' },
+              { name: 'Format check passed', outcome: '${{ steps.format.outcome }}' },
+              { name: 'Tests + coverage passed', outcome: '${{ steps.test.outcome }}' },
+              { name: 'Build successful', outcome: '${{ steps.build.outcome }}' },
+            ];
 
-            const finalBody = validationBody + `\n\n📋 [View workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n---\n⏰ Generated at: \`${timestamp}\``;
+            const allPassed = checks.every(c => c.outcome === 'success');
+            const status = allPassed ? '✅ PASSED' : '❌ FAILED';
+            const emoji = allPassed ? '🎉' : '💥';
 
-            // Find existing comment from this workflow
-            const comments = await github.rest.issues.listComments({
+            const checkLines = checks
+              .map(c => `- ${c.outcome === 'success' ? '✅' : c.outcome === 'skipped' ? '⏭️' : '❌'} ${c.name}`)
+              .join('\n');
+
+            const body = `${marker}
+            ${emoji} **PR Validation ${status}**
+
+            **Commit:** \`${{ github.event.pull_request.head.sha }}\`
+            **Branch:** \`${{ github.head_ref }}\`
+
+            **Checks:**
+            ${checkLines}
+
+            ${allPassed ? '**Ready to merge!** ✨' : '**Please fix the failing checks.**'}
+
+            ---
+            🔗 [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ⏰ Generated at: \`${new Date().toISOString()}\``;
+
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
 
-            const workflowSignature = '📋 [View workflow]';
-            const existingComment = comments.data
-              .reverse()
-              .find(comment => comment.body.includes(workflowSignature) && comment.user.login === 'github-actions[bot]');
+            const existing = comments.find(c =>
+              c.user.login === 'github-actions[bot]' && c.body.startsWith(marker)
+            );
 
-            if (existingComment) {
+            if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                comment_id: existingComment.id,
-                body: finalBody
+                comment_id: existing.id,
+                body: body,
               });
             } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: finalBody
+                body: body,
               });
             }
