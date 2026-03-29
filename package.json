@@ -45,6 +45,7 @@
   },
   "homepage": "https://github.com/agentage/agentkit#readme",
   "devDependencies": {
+    "@anthropic-ai/sdk": "latest",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "latest",
     "@typescript-eslint/parser": "latest",

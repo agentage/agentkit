@@ -1,0 +1,204 @@
+name: "\U0001F4E6 Prepare Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      packages:
+        description: 'Packages to bump (comma-separated: core, platform, or both)'
+        required: true
+        default: 'core,platform'
+        type: string
+      auto_merge:
+        description: 'Auto-merge the release PR after CI passes'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-release:
+    name: Prepare Release PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify
+        run: npm run verify
+
+      - name: Check for existing release PR
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING_PR=$(gh pr list --head "release/" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Release PR #$EXISTING_PR already exists, skipping"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for commits since last tag
+        if: steps.check_pr.outputs.skip != 'true'
+        id: check_commits
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            echo "No tags found, will create initial release"
+            echo "has_commits=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          COMMIT_COUNT=$(git rev-list --count --no-merges ${LAST_TAG}..HEAD)
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "has_commits=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_commits=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump versions
+        if: steps.check_pr.outputs.skip != 'true' && steps.check_commits.outputs.has_commits == 'true'
+        id: bump
+        run: |
+          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+          PACKAGES="${{ github.event.inputs.packages }}"
+          OUTPUT=$(node scripts/bump-version.js $BUMP_TYPE --packages $PACKAGES)
+          echo "$OUTPUT"
+          NEW_VERSIONS=$(echo "$OUTPUT" | grep "NEW_VERSIONS=" | cut -d= -f2)
+          RELEASE_LABEL=$(echo "$OUTPUT" | grep "RELEASE_LABEL=" | cut -d= -f2)
+          echo "new_versions=$NEW_VERSIONS" >> $GITHUB_OUTPUT
+          echo "release_label=$RELEASE_LABEL" >> $GITHUB_OUTPUT
+
+      - name: Update package-lock.json
+        if: steps.check_pr.outputs.skip != 'true' && steps.check_commits.outputs.has_commits == 'true'
+        run: npm install --package-lock-only
+
+      - name: Generate changelog with Claude
+        if: steps.check_pr.outputs.skip != 'true' && steps.check_commits.outputs.has_commits == 'true'
+        id: changelog
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          CHANGELOG=$(node scripts/generate-changelog.js "${{ steps.bump.outputs.release_label }}")
+          echo "$CHANGELOG" > changelog-content.md
+
+      - name: Update CHANGELOG.md
+        if: steps.check_pr.outputs.skip != 'true' && steps.check_commits.outputs.has_commits == 'true'
+        run: |
+          CHANGELOG_CONTENT=$(cat changelog-content.md)
+          node scripts/update-changelog.js "${{ steps.bump.outputs.release_label }}" "$CHANGELOG_CONTENT"
+
+      - name: Create release branch and PR
+        if: steps.check_pr.outputs.skip != 'true' && steps.check_commits.outputs.has_commits == 'true'
+        id: create_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_LABEL="${{ steps.bump.outputs.release_label }}"
+          # Create a safe branch name from label (replace @ with - and , with -)
+          SAFE_LABEL=$(echo "$RELEASE_LABEL" | sed 's/@/-/g; s/,/-/g; s/+/-/g')
+          BRANCH_NAME="release/${SAFE_LABEL}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH_NAME"
+          git add -A
+          git commit -m "$(cat <<'EOF'
+          chore: prepare release ${{ steps.bump.outputs.release_label }}
+
+          - Bump versions: ${{ steps.bump.outputs.new_versions }}
+          - Update CHANGELOG.md with release notes
+
+          [skip ci]
+          EOF
+          )"
+          git push origin "$BRANCH_NAME"
+
+          CHANGELOG_CONTENT=$(cat changelog-content.md)
+
+          PR_URL=$(gh pr create \
+            --title "Release ${RELEASE_LABEL}" \
+            --body "$(cat <<EOF
+          ## Release ${RELEASE_LABEL}
+
+          ### Packages
+          ${{ steps.bump.outputs.new_versions }}
+
+          ### Changes
+          ${CHANGELOG_CONTENT}
+
+          ### Checklist
+          - [ ] Review the changelog
+          - [ ] Verify version numbers are correct
+          - [ ] Merge when ready to release
+
+          ---
+
+          Once merged, this will automatically:
+          1. Detect version changes in packages/*/package.json
+          2. Run verification
+          3. Publish changed packages to npm (core first, then platform)
+          4. Create git tags per package
+          EOF
+          )" \
+            --base master \
+            --head "$BRANCH_NAME")
+
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          gh pr edit "$BRANCH_NAME" --add-label "release" 2>/dev/null || true
+
+      - name: Auto-merge release PR
+        if: steps.create_pr.outputs.pr_url && github.event.inputs.auto_merge == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ steps.create_pr.outputs.pr_url }}" --auto --squash
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.check_pr.outputs.skip }}" == "true" ]; then
+            echo "## Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "An open release PR already exists." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.check_commits.outputs.has_commits }}" == "false" ]; then
+            echo "## Skipped" >> $GITHUB_STEP_SUMMARY
+            echo "No commits since last release tag." >> $GITHUB_STEP_SUMMARY
+          elif [ -n "${{ steps.bump.outputs.release_label }}" ]; then
+            echo "## Release PR Created" >> $GITHUB_STEP_SUMMARY
+            echo "Packages: ${{ steps.bump.outputs.new_versions }}" >> $GITHUB_STEP_SUMMARY
+            AUTO_MERGE="${{ github.event.inputs.auto_merge }}"
+            if [ "$AUTO_MERGE" == "true" ]; then
+              echo "🔄 Auto-merge: **enabled**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "👀 Auto-merge: **disabled**" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Changelog" >> $GITHUB_STEP_SUMMARY
+            cat changelog-content.md >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
+          fi
