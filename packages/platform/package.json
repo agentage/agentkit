@@ -1,6 +1,6 @@
 {
   "name": "@agentage/platform",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Daemon/hub protocol types for the Agentage platform",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"

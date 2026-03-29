@@ -7,3 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [core@0.5.2+platform@0.2.2] - 2026-03-29
+
+### Infrastructure
+- Add automated release workflow with auto-merge capability
+
