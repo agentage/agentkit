@@ -147,8 +147,10 @@ jobs:
             --body "$(cat <<EOF
           ## Release ${RELEASE_LABEL}
 
+          This PR prepares the release of ${RELEASE_LABEL}.
+
           ### Packages
-          ${{ steps.bump.outputs.new_versions }}
+          - ${{ steps.bump.outputs.new_versions }}
 
           ### Changes
           ${CHANGELOG_CONTENT}
@@ -160,8 +162,14 @@ jobs:
 
           ---
 
+          ### How to test
+          \`\`\`bash
+          git checkout release/${SAFE_LABEL}
+          npm ci && npm run verify
+          \`\`\`
+
           Once merged, this will automatically:
-          1. Detect version changes in packages/*/package.json
+          1. Detect version changes in packages/\*/package.json
           2. Run verification
           3. Publish changed packages to npm (core first, then platform)
           4. Create git tags per package
