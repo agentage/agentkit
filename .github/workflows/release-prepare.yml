@@ -134,8 +134,6 @@ jobs:
 
           - Bump versions: ${{ steps.bump.outputs.new_versions }}
           - Update CHANGELOG.md with release notes
-
-          [skip ci]
           EOF
           )"
           git push origin "$BRANCH_NAME"
