@@ -3,10 +3,12 @@ import { createInterface, type Interface } from 'node:readline';
 import type { RunEvent } from '../types.js';
 import { output, error as errorEvent, result } from '../events.js';
 
+const DEFAULT_TIMEOUT_MS = 5 * 60_000; // 5 minutes
+
 /** Run a shell command and stream output line-by-line as events */
 export async function* shell(
   command: string,
-  options?: { signal?: AbortSignal }
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): AsyncGenerator<RunEvent> {
   if (!command.trim()) {
     yield errorEvent('EMPTY_COMMAND', 'No command provided');
@@ -17,11 +19,14 @@ export async function* shell(
   const signal = options?.signal;
   if (signal?.aborted) return;
 
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
   // Channel: push events from readline callbacks, pull from generator
   const queue: RunEvent[] = [];
   let resolve: (() => void) | null = null;
   let done = false;
   let exitCode: number | null = null;
+  let timedOut = false;
 
   const push = (event: RunEvent): void => {
     queue.push(event);
@@ -103,6 +108,16 @@ export async function* shell(
     }
   });
 
+  // Timeout: kill process after timeoutMs
+  const timer = setTimeout(() => {
+    if (!done) {
+      timedOut = true;
+      push(errorEvent('TIMEOUT', `Command timed out after ${timeoutMs}ms`, false));
+      cleanup();
+      killGroup();
+    }
+  }, timeoutMs);
+
   // Yield events as they arrive — true streaming
   while (!done || queue.length > 0) {
     if (queue.length === 0 && !done) {
@@ -113,10 +128,16 @@ export async function* shell(
     }
   }
 
+  clearTimeout(timer);
+
   if (!signal?.aborted) {
-    yield result(
-      exitCode === 0,
-      exitCode === 0 ? 'Command completed' : `Exited with code ${exitCode}`
-    );
+    if (timedOut) {
+      yield result(false, `Command timed out after ${timeoutMs}ms`);
+    } else {
+      yield result(
+        exitCode === 0,
+        exitCode === 0 ? 'Command completed' : `Exited with code ${exitCode}`
+      );
+    }
   }
 }

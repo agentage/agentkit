@@ -61,4 +61,28 @@ describe('shell adapter', () => {
     const events = await collect(shell('echo should-not-run', { signal: controller.signal }));
     expect(events).toHaveLength(0);
   });
+
+  it('kills process after timeout', async () => {
+    const start = Date.now();
+    const events = await collect(shell('sleep 60', { timeoutMs: 500 }));
+    const elapsed = Date.now() - start;
+
+    // Should finish in ~500ms, not 60s
+    expect(elapsed).toBeLessThan(3000);
+
+    const errors = events.filter((e) => e.type === 'error');
+    expect(errors.length).toBeGreaterThanOrEqual(1);
+    expect((errors[0]!.data as Record<string, unknown>).code).toBe('TIMEOUT');
+
+    const last = events[events.length - 1]!;
+    expect(last.type).toBe('result');
+    expect((last.data as Record<string, unknown>).success).toBe(false);
+  }, 10_000);
+
+  it('uses default 5min timeout', async () => {
+    // Just verify the signature accepts no timeoutMs and doesn't throw
+    const events = await collect(shell('echo quick'));
+    const last = events[events.length - 1]!;
+    expect((last.data as Record<string, unknown>).success).toBe(true);
+  });
 });
