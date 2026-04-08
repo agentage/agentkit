@@ -90,6 +90,16 @@ export interface RunContext {
   sleep: (ms: number) => Promise<void>;
 }
 
+/** Project context passed to agent runs */
+export interface ProjectRef {
+  /** Project name (from package.json or directory name) */
+  name: string;
+  /** Absolute path to the project root (or worktree) */
+  path: string;
+  /** Git branch name (set when targeting a specific worktree) */
+  branch?: string;
+}
+
 /** Input to an agent run */
 export interface RunInput {
   /** The task/prompt — what the agent should do */
@@ -100,6 +110,9 @@ export interface RunInput {
 
   /** Additional context (file paths, text, URLs — agent decides how to use) */
   context?: string[];
+
+  /** Project context (set when run is scoped to a project) */
+  project?: ProjectRef;
 }
 
 /** Execution record */

@@ -8,6 +8,7 @@ export type {
   AgentFactory,
   RunState,
   RunInput,
+  ProjectRef,
   RunContext,
   Run,
   RunEventType,
