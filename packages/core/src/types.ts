@@ -98,6 +98,8 @@ export interface ProjectRef {
   path: string;
   /** Git branch name (set when targeting a specific worktree) */
   branch?: string;
+  /** Git remote URL (set when project was cloned from a remote) */
+  remote?: string;
 }
 
 /** Input to an agent run */
