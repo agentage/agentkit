@@ -31,6 +31,20 @@ describe('agent', () => {
     expect(a.manifest.name).toBe('');
   });
 
+  it('passes inputSchema and outputSchema through to manifest', () => {
+    const inputSchema = { type: 'object', properties: { x: { type: 'string' } } };
+    const outputSchema = { type: 'object', properties: { ok: { type: 'boolean' } } };
+    const a = agent({ name: 'schema-agent', inputSchema, outputSchema });
+    expect(a.manifest.inputSchema).toEqual(inputSchema);
+    expect(a.manifest.outputSchema).toEqual(outputSchema);
+  });
+
+  it('omits inputSchema and outputSchema when not provided', () => {
+    const a = agent({ name: 'no-schema' });
+    expect(a.manifest.inputSchema).toBeUndefined();
+    expect(a.manifest.outputSchema).toBeUndefined();
+  });
+
   it('stores declarative config in manifest.config', () => {
     const a = agent({
       model: 'claude-sonnet-4-6',

@@ -54,6 +54,7 @@ export const agent = (config: AgentConfig): Agent => {
     version: config.version,
     tags: config.tags,
     inputSchema: config.inputSchema,
+    outputSchema: config.outputSchema,
     path: '',
     ...(Object.keys(declarativeConfig).length > 0 ? { config: declarativeConfig } : {}),
   };

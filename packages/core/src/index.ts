@@ -37,3 +37,6 @@ export { mcp } from './mcp.js';
 // Adapters
 export { shell, claude, copilot } from './adapters/index.js';
 export type { ClaudeOptions, CopilotOptions } from './adapters/index.js';
+
+// Note: the `defineAgent` Zod helper lives at `@agentage/core/zod` (subpath export).
+// Import from there when you have `zod >= 4` installed as a peer.

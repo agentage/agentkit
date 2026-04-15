@@ -18,6 +18,9 @@ export interface AgentManifest {
   /** JSON Schema for structured input this agent accepts (beyond plain text) */
   inputSchema?: JsonSchema;
 
+  /** JSON Schema describing the shape of `result.data` emitted by this agent */
+  outputSchema?: JsonSchema;
+
   /** The source path this agent was loaded from */
   path: string;
 
@@ -187,6 +190,8 @@ export interface AgentConfig {
   tags?: string[];
   /** JSON Schema for structured input */
   inputSchema?: JsonSchema;
+  /** JSON Schema describing the shape of `result.data` emitted by this agent */
+  outputSchema?: JsonSchema;
 
   // Declarative LLM mode (no run function needed)
   /** LLM model ID */
