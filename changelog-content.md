@@ -1,3 +1,6 @@
 ### New Features
-- Add `defineAgent()` Zod helper for easier agent definition with schema validation
-- Add `manifest.outputSchema` support for defining agent output schemas
+- Add `ctx.run()` primitive for executing agent operations
+- Add `AgentRegistry` for managing agent instances
+- Add `defineAgent()` Zod helper for improved agent definition
+- Add `manifest.outputSchema` support for structured agent outputs
+- Add comprehensive testing fixtures for agent development

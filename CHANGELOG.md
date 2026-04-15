@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [core@0.8.0+platform@0.4.0] - 2026-04-15
+
+### New Features
+- Add `ctx.run()` primitive for executing agent operations
+- Add `AgentRegistry` for managing agent instances
+- Add `defineAgent()` Zod helper for improved agent definition
+- Add `manifest.outputSchema` support for structured agent outputs
+- Add comprehensive testing fixtures for agent development
+
 ## [core@0.7.0+platform@0.3.0] - 2026-04-15
 
 ### New Features
