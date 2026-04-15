@@ -31,6 +31,10 @@ export { isTerminal, canTransition } from './state-machine.js';
 // Agent builder
 export { agent, makeCtxRun, DEFAULT_DEPTH_LIMIT } from './agent.js';
 
+// Composition combinators
+export { sequence, parallel, map } from './combinators/index.js';
+export type { StepRef, MapFactory } from './combinators/index.js';
+
 // Event helpers
 export { output, progress, error, result } from './events.js';
 
