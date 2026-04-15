@@ -117,7 +117,7 @@ jobs:
         if: steps.check_pr.outputs.skip != 'true' && steps.check_commits.outputs.has_commits == 'true'
         id: create_pr
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT || secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           RELEASE_LABEL="${{ steps.bump.outputs.release_label }}"
           # Create a safe branch name from label (replace @ with - and , with -)
@@ -177,7 +177,7 @@ jobs:
       - name: Auto-merge release PR
         if: steps.create_pr.outputs.pr_url && github.event.inputs.auto_merge == 'true'
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT || secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           gh pr merge "${{ steps.create_pr.outputs.pr_url }}" --auto --squash
 
