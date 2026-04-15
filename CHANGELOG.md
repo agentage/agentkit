@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [core@0.7.0+platform@0.3.0] - 2026-04-15
+
+### New Features
+- Add `defineAgent()` Zod helper for easier agent definition with schema validation
+- Add `manifest.outputSchema` support for defining agent output schemas
+
 ## [core@0.6.0] - 2026-04-09
 
 ### New Features
