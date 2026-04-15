@@ -9,7 +9,17 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./zod": {
+      "types": "./dist/zod/index.d.ts",
+      "import": "./dist/zod/index.js"
     }
+  },
+  "peerDependencies": {
+    "zod": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": { "optional": true }
   },
   "files": [
     "dist"

@@ -55,6 +55,8 @@
     "eslint-plugin-prettier": "latest",
     "prettier": "latest",
     "typescript": "latest",
-    "vitest": "latest"
+    "vitest": "latest",
+    "zod": "4.3.6",
+    "zod-to-json-schema": "3.25.2"
   }
 }
