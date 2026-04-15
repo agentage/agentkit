@@ -1,5 +1,87 @@
-import type { Agent, AgentConfig, AgentProcess, RunContext, RunEvent, RunInput } from './types.js';
+import type {
+  Agent,
+  AgentConfig,
+  AgentProcess,
+  AgentRuntime,
+  CtxRunFn,
+  CtxRunResult,
+  RunContext,
+  RunEvent,
+  RunInput,
+} from './types.js';
 import { result as resultEvent } from './events.js';
+
+/** Default recursion cap — ship conservative, surface via daemon config later. */
+export const DEFAULT_DEPTH_LIMIT = 50;
+
+const NO_REGISTRY_ERROR =
+  'ctx.run(): no registry configured. Run this agent through a daemon that provides one, or pass { registry } via Agent.run(input, runtime).';
+
+/** Build a ctx.run function given the runtime plumbing. */
+export const makeCtxRun = (runtime: AgentRuntime, signal: AbortSignal): CtxRunFn => {
+  const depth = runtime.depth ?? 0;
+
+  return async function* ctxRun<O = unknown>(
+    ref: string | Agent,
+    input: RunInput
+  ): AsyncGenerator<RunEvent, CtxRunResult<O>, void> {
+    // Daemon-provided dispatch takes precedence (handles linkage + persistence).
+    if (runtime.dispatch) {
+      return (yield* runtime.dispatch<O>(ref, input)) as CtxRunResult<O>;
+    }
+
+    if (signal.aborted) {
+      return { success: false, error: 'parent aborted' };
+    }
+
+    if (depth + 1 > DEFAULT_DEPTH_LIMIT) {
+      return {
+        success: false,
+        error: `ctx.run depth limit exceeded (${DEFAULT_DEPTH_LIMIT})`,
+      };
+    }
+
+    let resolved: Agent | null;
+    if (typeof ref === 'string') {
+      if (!runtime.registry) {
+        return { success: false, error: NO_REGISTRY_ERROR };
+      }
+      resolved = await runtime.registry.resolve(ref);
+      if (!resolved) {
+        return { success: false, error: `agent "${ref}" not found` };
+      }
+    } else {
+      resolved = ref;
+    }
+
+    const childProcess = await resolved.run(input, {
+      ...runtime,
+      depth: depth + 1,
+    });
+
+    // Cascade cancellation: when parent aborts, cancel child.
+    const onAbort = (): void => childProcess.cancel();
+    signal.addEventListener('abort', onAbort, { once: true });
+
+    let childResult: CtxRunResult<O> = { success: true };
+    try {
+      for await (const event of childProcess.events) {
+        yield event;
+        if (event.data.type === 'result') {
+          childResult = {
+            success: event.data.success,
+            output: event.data.output as O,
+            error: event.data.success ? undefined : 'child run returned unsuccessful result',
+          };
+        }
+      }
+    } finally {
+      signal.removeEventListener('abort', onAbort);
+    }
+
+    return childResult;
+  };
+};
 
 const abortSleep = (ms: number, signal: AbortSignal): Promise<void> =>
   new Promise((resolve) => {
@@ -63,7 +145,7 @@ export const agent = (config: AgentConfig): Agent => {
 
   return {
     manifest,
-    async run(input: RunInput): Promise<AgentProcess> {
+    async run(input: RunInput, runtime: AgentRuntime = {}): Promise<AgentProcess> {
       const runId = crypto.randomUUID();
       const controller = new AbortController();
       const { signal } = controller;
@@ -71,6 +153,9 @@ export const agent = (config: AgentConfig): Agent => {
       const ctx: RunContext = {
         signal,
         sleep: (ms: number) => abortSleep(ms, signal),
+        run: makeCtxRun(runtime, signal),
+        parentRunId: runtime.parentRunId,
+        depth: runtime.depth ?? 0,
       };
 
       async function* wrappedEvents(): AsyncGenerator<RunEvent> {
