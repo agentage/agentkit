@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [core@0.9.0+platform@0.5.0] - 2026-04-15
+
+### New Features
+- Add sequence, parallel, and map combinators for composing agent operations
+- Add PAT_TOKEN fallback configuration for automated release merging
+
 ## [core@0.8.0+platform@0.4.0] - 2026-04-15
 
 ### New Features
