@@ -13,6 +13,10 @@
     "./zod": {
       "types": "./dist/zod/index.d.ts",
       "import": "./dist/zod/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
     }
   },
   "peerDependencies": {

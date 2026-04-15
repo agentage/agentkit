@@ -55,9 +55,62 @@ export interface Agent {
   /**
    * Execute this agent.
    * @param input - task, config overrides, context
+   * @param runtime - optional runtime plumbing (registry for ctx.run, lineage)
    * @returns a running process with event stream
    */
-  run(input: RunInput): Promise<AgentProcess>;
+  run(input: RunInput, runtime?: AgentRuntime): Promise<AgentProcess>;
+}
+
+/**
+ * Runtime plumbing injected by the daemon (or test harness) at agent start.
+ * Threaded into RunContext so agents can call other agents via ctx.run().
+ */
+export interface AgentRuntime {
+  /** Resolver used by ctx.run() to find agents by name */
+  registry?: AgentRegistry;
+
+  /** Run ID of the parent agent (set when this run was started via ctx.run) */
+  parentRunId?: string;
+
+  /** Recursion depth — 0 for top-level runs, +1 per nested ctx.run */
+  depth?: number;
+
+  /**
+   * Called by agent() when the user invokes ctx.run(). Daemons override this
+   * to actually dispatch + link the child run; tests can stub it.
+   * When omitted, ctx.run resolves via registry + runs in-process.
+   */
+  dispatch?: CtxRunFn;
+}
+
+/**
+ * Resolves an agent reference (name or agent@machine) to an Agent instance.
+ * The concrete registry lives in the daemon; agents receive it via ctx.run.
+ */
+export interface AgentRegistry {
+  /** @returns the agent, or null if not found */
+  resolve(ref: string): Promise<Agent | null>;
+}
+
+/**
+ * Signature of ctx.run — dispatches a child agent and yields its events,
+ * returning the final result. Designed for `yield*` inside generators:
+ *
+ *   const result = yield* ctx.run('pr-list', { task: '' });
+ *   if (result.success) console.log(result.output);
+ */
+export type CtxRunFn = <O = unknown>(
+  ref: string | Agent,
+  input: RunInput
+) => AsyncGenerator<RunEvent, CtxRunResult<O>, void>;
+
+export interface CtxRunResult<O = unknown> {
+  /** true if the child emitted result({ success: true, ... }) */
+  success: boolean;
+  /** The child's result.output (validated against its outputSchema by daemon) */
+  output?: O;
+  /** Error message if success=false (or if depth limit / registry resolution failed) */
+  error?: string;
 }
 
 /**
@@ -91,6 +144,23 @@ export interface RunContext {
 
   /** Abort-aware delay — resolves early (without throwing) if cancelled */
   sleep: (ms: number) => Promise<void>;
+
+  /**
+   * Dispatch another agent by name (or instance). Designed for `yield*`:
+   *
+   *   const result = yield* ctx.run('pr-list', { task: '' });
+   *
+   * Each invocation creates a linked child run. Daemons implement cascade
+   * cancellation, depth limits, and parent/child linkage. Throws at the
+   * call site (via the returned generator) when no registry is configured.
+   */
+  run: CtxRunFn;
+
+  /** Run ID of the parent run, if this is a nested ctx.run invocation */
+  parentRunId?: string;
+
+  /** Recursion depth — 0 for top-level runs, +1 per nested ctx.run */
+  depth: number;
 }
 
 /** Project context passed to agent runs */

@@ -6,6 +6,10 @@ export type {
   Agent,
   AgentConfig,
   AgentFactory,
+  AgentRuntime,
+  AgentRegistry,
+  CtxRunFn,
+  CtxRunResult,
   RunState,
   RunInput,
   ProjectRef,
@@ -25,7 +29,7 @@ export { TERMINAL_STATES, STATE_TRANSITIONS, OUTPUT_FORMATS } from './constants.
 export { isTerminal, canTransition } from './state-machine.js';
 
 // Agent builder
-export { agent } from './agent.js';
+export { agent, makeCtxRun, DEFAULT_DEPTH_LIMIT } from './agent.js';
 
 // Event helpers
 export { output, progress, error, result } from './events.js';
