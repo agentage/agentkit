@@ -46,5 +46,19 @@ export { mcp } from './mcp.js';
 export { shell, claude, copilot } from './adapters/index.js';
 export type { ClaudeOptions, CopilotOptions } from './adapters/index.js';
 
+// Control plane — action registry + envelope for host UI → local env dispatch
+export { action, createRegistry, ActionError, isActionError } from './control/index.js';
+export type {
+  ActionContext,
+  ActionDefinition,
+  ActionErrorCode,
+  ActionLogger,
+  ActionManifest,
+  ActionRegistry,
+  ActionScope,
+  InvokeEvent,
+  InvokeRequest,
+} from './control/index.js';
+
 // Note: the `defineAgent` Zod helper lives at `@agentage/core/zod` (subpath export).
 // Import from there when you have `zod >= 4` installed as a peer.
