@@ -1,3 +1,2 @@
 ### New Features
-- Add sequence, parallel, and map combinators for composing agent operations
-- Add PAT_TOKEN fallback configuration for automated release merging
+- Add control-plane action registry for host-UI dispatch in core package
