@@ -43,6 +43,12 @@ export interface Heartbeat {
     memoryUsedMb?: number;
     memoryTotalMb?: number;
   };
+
+  /** Daemon-configured default install target for agents (agents.default) */
+  agentsDefault?: string;
+
+  /** Daemon-configured default discovery root for projects (projects.default) */
+  projectsDefault?: string;
 }
 
 /** Agent as seen from the hub — manifest + which machine it's on */
