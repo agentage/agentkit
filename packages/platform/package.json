@@ -1,6 +1,6 @@
 {
   "name": "@agentage/platform",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Daemon/hub protocol types for the Agentage platform",
   "type": "module",
   "main": "./dist/index.js",
