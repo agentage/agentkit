@@ -40,10 +40,14 @@ export interface Heartbeat {
   /** Machine resource snapshot (optional) */
   resources?: {
     cpuUsage?: number;
+    cpuCount?: number;
     memoryUsedMb?: number;
     memoryTotalMb?: number;
     diskUsedMb?: number;
     diskTotalMb?: number;
+    loadAvg1m?: number;
+    loadAvg5m?: number;
+    loadAvg15m?: number;
   };
 
   /** Daemon-configured default install target for agents (agents.default) */
