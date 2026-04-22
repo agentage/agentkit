@@ -1,2 +1,2 @@
 ### New Features
-- Add disk usage monitoring to agent heartbeat system for better resource tracking
+- Add CPU count and load average metrics to agent heartbeat monitoring

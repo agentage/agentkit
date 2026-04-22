@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [platform@0.6.1] - 2026-04-22
+
+### New Features
+- Add CPU count and load average metrics to agent heartbeat monitoring
+
 ## [platform@0.6.0] - 2026-04-22
 
 ### New Features
