@@ -1,2 +1,2 @@
 ### New Features
-- Add control-plane action registry for host-UI dispatch in core package
+- Add disk usage monitoring to agent heartbeat system for better resource tracking
