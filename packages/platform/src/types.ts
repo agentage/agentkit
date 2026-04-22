@@ -42,6 +42,8 @@ export interface Heartbeat {
     cpuUsage?: number;
     memoryUsedMb?: number;
     memoryTotalMb?: number;
+    diskUsedMb?: number;
+    diskTotalMb?: number;
   };
 
   /** Daemon-configured default install target for agents (agents.default) */
