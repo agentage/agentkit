@@ -53,6 +53,13 @@ interface InvocationRecord {
   result: Promise<unknown>;
 }
 
+/**
+ * @experimental Action registry constructor.
+ *
+ * Stable behavior is gated on a real host-UI consumer wiring it into a
+ * transport (REST, WS, IPC, or MCP). Until that lands the public surface
+ * may change between minor versions of `@agentage/core`.
+ */
 export const createRegistry = (options?: { idGenerator?: () => string }): ActionRegistry => {
   const actions = new Map<string, Map<string, ActionDefinition>>();
   const idempotency = new Map<string, InvocationRecord>();
