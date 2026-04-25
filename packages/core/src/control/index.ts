@@ -1,3 +1,13 @@
+/**
+ * @experimental Control-plane action registry.
+ *
+ * The shape of `ActionManifest`, `InvokeEvent`, the error union, and the
+ * registry surface are NOT covered by SemVer until a host-UI consumer
+ * (CLI daemon, dashboard, desktop, MCP facade) lands and exercises them
+ * end-to-end. Expect breaking changes between minor versions until then.
+ *
+ * Tracking: see work/tasks/feature-stabilization (NOT TESTED tier).
+ */
 export { action } from './action.js';
 export { createRegistry } from './registry.js';
 export { ActionError, isActionError } from './errors.js';
