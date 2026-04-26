@@ -8,6 +8,7 @@ export type {
   AgentFactory,
   AgentRuntime,
   AgentRegistry,
+  ContentPart,
   CtxRunFn,
   CtxRunResult,
   RunState,
@@ -18,6 +19,7 @@ export type {
   RunEventType,
   RunEventData,
   RunEvent,
+  ResultOutput,
   Tool,
   McpServer,
 } from './types.js';
@@ -36,7 +38,7 @@ export { sequence, parallel, map } from './combinators/index.js';
 export type { StepRef, MapFactory } from './combinators/index.js';
 
 // Event helpers
-export { output, progress, error, result } from './events.js';
+export { output, progress, error, result, parts } from './events.js';
 
 // Builders
 export { tool } from './tool.js';

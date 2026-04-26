@@ -227,6 +227,38 @@ export interface Run {
 export type RunEventType = 'output' | 'state' | 'error' | 'input_required' | 'result';
 
 /**
+ * One MIME-typed slice of a multi-part result. Order in the array signals
+ * preference — first match by canonical type wins on render.
+ *
+ * Canonical types:
+ *   - `text/markdown`     — user-facing rendered view
+ *   - `application/json`  — structured data for programmatic consumers
+ *   - `text/plain`        — raw text fallback
+ *
+ * @example
+ *   yield result(true, [
+ *     { type: 'text/markdown', content: '# Done\\n\\n42 commits' },
+ *     { type: 'application/json', content: { commits: 42 } },
+ *   ]);
+ */
+export interface ContentPart {
+  type: string;
+  content: unknown;
+}
+
+/**
+ * Result output may be:
+ *   - A single value (legacy / programmatic shape)
+ *   - An array of `ContentPart` (multi-format envelope)
+ *
+ * The dashboard prefers `text/markdown`, falls back to `application/json`,
+ * then `text/plain`, then the first part. Children consuming a parent's
+ * `result.output` (orchestrators, ctx.run callers) should accept either
+ * shape.
+ */
+export type ResultOutput = unknown;
+
+/**
  * Event payloads — discriminated union.
  *
  * `output` is the generic channel — factories put anything in `content`,
@@ -237,7 +269,7 @@ export type RunEventData =
   | { type: 'state'; state: RunState; message?: string }
   | { type: 'error'; code: string; message: string; recoverable: boolean }
   | { type: 'input_required'; prompt: string; schema?: JsonSchema }
-  | { type: 'result'; success: boolean; output?: unknown };
+  | { type: 'result'; success: boolean; output?: ResultOutput };
 
 /** A single event in the run stream */
 export interface RunEvent {
