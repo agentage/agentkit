@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { output, progress, error, result } from './events.js';
+import { output, progress, error, result, parts } from './events.js';
 
 describe('output', () => {
   it('creates text output event with default format', () => {
@@ -90,5 +90,64 @@ describe('result', () => {
     const event = result(true);
     expect(event.timestamp).toBeGreaterThanOrEqual(before);
     expect(event.timestamp).toBeLessThanOrEqual(Date.now());
+  });
+
+  it('accepts a ContentPart array as output', () => {
+    const event = result(true, [
+      { type: 'text/markdown', content: '# Done' },
+      { type: 'application/json', content: { ok: true } },
+    ]);
+    expect(event.data).toEqual({
+      type: 'result',
+      success: true,
+      output: [
+        { type: 'text/markdown', content: '# Done' },
+        { type: 'application/json', content: { ok: true } },
+      ],
+    });
+  });
+});
+
+describe('parts', () => {
+  it('orders markdown → text → json', () => {
+    expect(parts({ markdown: '# m', text: 't', json: { j: 1 } })).toEqual([
+      { type: 'text/markdown', content: '# m' },
+      { type: 'text/plain', content: 't' },
+      { type: 'application/json', content: { j: 1 } },
+    ]);
+  });
+
+  it('omits absent slots', () => {
+    expect(parts({ markdown: '# m' })).toEqual([{ type: 'text/markdown', content: '# m' }]);
+    expect(parts({ json: { x: 1 } })).toEqual([{ type: 'application/json', content: { x: 1 } }]);
+  });
+
+  it('keeps json: null distinct from absent (null is valid JSON)', () => {
+    expect(parts({ json: null })).toEqual([{ type: 'application/json', content: null }]);
+    expect(parts({})).toEqual([]);
+  });
+
+  it('appends extra parts after canonical ones', () => {
+    expect(
+      parts({
+        markdown: '# m',
+        extra: [{ type: 'text/csv', content: 'a,b\n1,2' }],
+      })
+    ).toEqual([
+      { type: 'text/markdown', content: '# m' },
+      { type: 'text/csv', content: 'a,b\n1,2' },
+    ]);
+  });
+
+  it('feeds straight into result()', () => {
+    const event = result(true, parts({ markdown: '# Done', json: { ok: true } }));
+    expect(event.data).toEqual({
+      type: 'result',
+      success: true,
+      output: [
+        { type: 'text/markdown', content: '# Done' },
+        { type: 'application/json', content: { ok: true } },
+      ],
+    });
   });
 });
